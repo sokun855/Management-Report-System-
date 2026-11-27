@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SME / FSA-S Loan Officer Portal - រាជធានីភ្នំពេញ</title>
+    
+    <!-- Google Fonts: Kantumruy Pro for Khmer & Inter for English -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- html2pdf.js for clean PDF generation with Khmer Unicode support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kantumruy Pro', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Kantumruy Pro', 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .tab-active {
+            background-color: #1d4ed8;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.25);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+        }
+        /* Suggestion box shown below village input while typing */
+        .village-suggestion-box {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            max-height: 220px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.75rem;
+            box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.16);
+            z-index: 35;
+        }
+        .village-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.12s ease;
+        }
+        .village-suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .village-suggestion-item:hover {
+            background-color: #eff6ff;
+        }
+        /* Animated Logo Keyframes */
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(2deg); }
+        }
+        @keyframes logoRingPulse {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            70% { transform: scale(1.25); opacity: 0; }
+            100% { transform: scale(1.25); opacity: 0; }
+        }
+        .animated-logo-box {
+            animation: logoFloat 3s ease-in-out infinite;
+            position: relative;
+        }
+        .animated-logo-ring {
+            position: absolute;
+            inset: -2px;
+            border-radius: 0.75rem;
+            border: 2px solid rgba(251, 191, 36, 0.65);
+            animation: logoRingPulse 2.4s infinite;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container (Replaces alert()) -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-gradient-to-r from-slate-950 via-brand-900 to-brand-700 text-white shadow-xl border-b border-white/15 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 grid grid-cols-3 items-center gap-2">
+            <!-- Left: Hamburger Button (ត្រីបី) -->
+            <div class="flex items-center justify-start">
+                <button type="button" id="hamburger-btn" onclick="window.toggleNavDrawer(event)" aria-label="បើកម៉ឺនុយ"
+                    class="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-md flex items-center justify-center text-lg border border-white/20 shadow-sm transition cursor-pointer">
+                    <i class="fa-solid fa-bars pointer-events-none"></i>
+                </button>
+            </div>
+
+            <!-- Center: Animated Logo on Left of System Title -->
+            <div class="flex items-center justify-center gap-3 text-center">
+                <div class="animated-logo-box w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-300/25 to-white/10 backdrop-blur-md flex items-center justify-center text-xl shadow-lg border border-amber-300/40 shrink-0">
+                    <span class="animated-logo-ring"></span>
+                    <i class="fa-solid fa-chart-line text-amber-300"></i>
+                </div>
+                <h1 class="font-bold text-sm sm:text-lg leading-tight tracking-wide whitespace-nowrap drop-shadow-xs">ប្រព័ន្ធគ្រប់គ្រងរបាយការណ៍</h1>
+            </div>
+
+            <!-- Right Spacer (User removed from Header) -->
+            <div></div>
+        </div>
+    </header>
+
+    <!-- Slide-out Hamburger Navigation Drawer (មុខងារត្រីបី) -->
+    <div id="nav-drawer-backdrop" onclick="window.closeNavDrawer()" class="fixed inset-0 z-40 hidden bg-slate-900/60 backdrop-blur-xs transition-opacity"></div>
+    <aside id="nav-drawer" class="fixed top-0 left-0 bottom-0 z-50 w-72 sm:w-80 bg-white text-slate-800 shadow-2xl -translate-x-full transition-transform duration-200 flex flex-col justify-between border-r border-slate-200">
+        <div>
+            <!-- Drawer Header -->
+            <div class="bg-gradient-to-r from-brand-900 to-brand-700 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm">ប្រព័ន្ធគ្រប់គ្រងរបាយការណ៍</div>
+                        <div class="text-[11px] text-blue-100">ម៉ឺនុយមុខងារទាំងអស់</div>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeNavDrawer()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark pointer-events-none"></i>
+                </button>
+            </div>
+
+            <!-- Drawer Menu Items -->
+            <div class="p-3 space-y-1.5">
+                <button type="button" onclick="window.navigateFromDrawer('home')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition text-left cursor-pointer">
+                    <i class="fa-solid fa-house w-5 text-center text-brand-600 pointer-events-none"></i>
+                    <span>ហូម (Home)</span>
+                </button>
+
+                <div class="pt-2 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    មុខងាររបាយការណ៍ទាំងបី
+                </div>
+
+                <button type="button" onclick="window.navigateFromDrawer('daily-report')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-brand-50 hover:text-brand-700 transition text-left cursor-pointer">
+                    <i class="fa-solid fa-clipboard-list w-5 text-center text-blue-600 pointer-events-none"></i>
+                    <span>១. របាយការណ៍ប្រចាំថ្ងៃ</span>
+                </button>
+
+                <button type="button" onclick="window.navigateFromDrawer('daily-plan')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700 transition text-left cursor-pointer">
+                    <i class="fa-solid fa-calendar-check w-5 text-center text-teal-600 pointer-events-none"></i>
+                    <span>២. ផែនការប្រចាំថ្ងៃ</span>
+                </button>
+
+                <button type="button" onclick="window.navigateFromDrawer('weekly-plan')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition text-left cursor-pointer">
+                    <i class="fa-solid fa-calendar-week w-5 text-center text-amber-600 pointer-events-none"></i>
+                    <span>៣. ផែនការប្រចាំសប្តាហ៍</span>
+                </button>
+
+                <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                    <!-- Settings (Admin Protected) -->
+                    <button type="button" onclick="window.navigateFromDrawer('settings')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-100 transition text-left cursor-pointer">
+                        <span class="flex items-center gap-3">
+                            <i class="fa-solid fa-gear w-5 text-center text-slate-600 pointer-events-none"></i>
+                            <span>ការកំណត់ (Admin)</span>
+                        </span>
+                        <span id="drawer-admin-lock" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
+                            <i class="fa-solid fa-lock mr-0.5"></i> Admin
+                        </span>
+                    </button>
+
+                    <!-- Help (Below Settings inside Drawer) -->
+                    <button type="button" onclick="window.navigateFromDrawer('help')" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition text-left cursor-pointer">
+                        <i class="fa-solid fa-circle-question w-5 text-center text-emerald-600 pointer-events-none"></i>
+                        <span>ជំនួយ (Help)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawer Footer Status -->
+        <div class="p-4 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
+            <span id="drawer-auth-status">ស្ថានភាព៖ User ធម្មតា</span>
+            <button type="button" id="drawer-logout-btn" onclick="window.logoutAdminSession()" class="hidden text-rose-600 hover:underline font-semibold cursor-pointer">
+                ចាកចេញ Admin
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-3 sm:px-4 py-5 space-y-5">
+
+        <!-- Staff Identity & Memory Recall Card -->
+        <section class="glass-card rounded-2xl p-4 sm:p-5">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div class="flex-grow space-y-1.5">
+                    <label for="staff-name" class="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-brand-600"></i>
+                        ឈ្មោះបុគ្គលិកកម្ចី (Staff Name) <span class="text-red-500">*</span>
+                        <span id="memory-badge" class="hidden text-xs font-normal px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            <i class="fa-solid fa-clock-rotate-left mr-1"></i>បានទាញទិន្នន័យចាស់មកបង្ហាញ
+                        </span>
+                    </label>
+                    <div class="relative flex items-center gap-2">
+                        <div class="relative flex-grow">
+                            <input type="text" id="staff-name" list="staff-list" placeholder="វាយបញ្ចូល ឬជ្រើសរើសឈ្មោះរបស់អ្នក (ឧ. សុខ ដារ៉ា)..."
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition text-sm sm:text-base font-medium bg-slate-50 focus:bg-white">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <datalist id="staff-list"></datalist>
+                        </div>
+                        <button type="button" onclick="recallStaffData(true)" title="ទាញទិន្នន័យចុងក្រោយ"
+                            class="px-3.5 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-sm font-medium transition flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span class="hidden sm:inline">ទាញទិន្នន័យចាស់</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Saved Staff Quick Pills -->
+                <div id="saved-staff-pills" class="flex flex-wrap items-center gap-1.5"></div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="grid grid-cols-3 gap-2 p-1.5 bg-slate-200/80 rounded-2xl">
+            <button type="button" onclick="switchTab('daily-report')" id="tab-daily-report"
+                class="tab-btn tab-active py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                <i class="fa-solid fa-clipboard-list text-base"></i>
+                <span>១. របាយការណ៍ប្រចាំថ្ងៃ</span>
+            </button>
+            <button type="button" onclick="switchTab('daily-plan')" id="tab-daily-plan"
+                class="tab-btn text-slate-600 hover:text-slate-900 hover:bg-white/60 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                <i class="fa-solid fa-calendar-check text-base"></i>
+                <span>២. ផែនការប្រចាំថ្ងៃ</span>
+            </button>
+            <button type="button" onclick="switchTab('weekly-plan')" id="tab-weekly-plan"
+                class="tab-btn text-slate-600 hover:text-slate-900 hover:bg-white/60 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex flex-col sm:flex-row items-center justify-center gap-1.5">
+                <i class="fa-solid fa-calendar-week text-base"></i>
+                <span>៣. ផែនការប្រចាំសប្តាហ៍</span>
+            </button>
+        </nav>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 1: របាយការណ៍ប្រចាំថ្ងៃ (DAILY REPORT) -->
+        <!-- ========================================================= -->
+        <section id="panel-daily-report" class="tab-panel glass-card rounded-2xl p-4 sm:p-6 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                        </span>
+                        របាយការណ៍ប្រចាំថ្ងៃ (Daily Report)
+                    </h2>
+                </div>
+                <button type="button" onclick="resetDailyReport()" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-eraser"></i>
+                    <span>សម្អាតទិន្នន័យ</span>
+                </button>
+            </div>
+
+            <!-- 1. Disbursed to Date -->
+            <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200/80 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="text-sm font-bold text-blue-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-coins text-amber-500"></i> ខ្ញុំបាទបានទម្លាក់ទុន (គិតត្រឹមថ្ងៃទី)
+                    </span>
+                    <input type="date" id="dr-disb-date" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-white text-xs sm:text-sm font-medium outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="dr-disb-acc" class="block text-xs font-semibold text-slate-600 mb-1">ចំនួនអតិថិជន (acc)</label>
+                        <input type="number" id="dr-disb-acc" min="0" placeholder="0" class="w-full px-3.5 py-2 rounded-xl border border-blue-200 bg-white text-sm font-semibold outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label for="dr-disb-amt" class="block text-xs font-semibold text-slate-600 mb-1">ទឹកប្រាក់ទម្លាក់ ($)</label>
+                        <input type="number" id="dr-disb-amt" min="0" step="any" placeholder="0" class="w-full px-3.5 py-2 rounded-xl border border-blue-200 bg-white text-sm font-semibold outline-none focus:border-brand-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Disbursement Plan -->
+            <div class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="text-sm font-bold text-indigo-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-day text-indigo-600"></i> ផែនការទម្លាក់ថ្ងៃទី
+                    </span>
+                    <input type="date" id="dr-plan-date" class="px-3 py-1.5 rounded-xl border border-indigo-200 bg-white text-xs sm:text-sm font-medium outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label for="dr-plan-acc" class="block text-xs font-semibold text-slate-600 mb-1">ចំនួនអតិថិជន (acc)</label>
+                        <input type="number" id="dr-plan-acc" min="0" placeholder="0" class="w-full px-3.5 py-2 rounded-xl border border-indigo-200 bg-white text-sm font-semibold outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label for="dr-plan-amt" class="block text-xs font-semibold text-slate-600 mb-1">ទំហំផែនការទម្លាក់ ($)</label>
+                        <input type="number" id="dr-plan-amt" min="0" step="any" placeholder="0" class="w-full px-3.5 py-2 rounded-xl border border-indigo-200 bg-white text-sm font-semibold outline-none focus:border-brand-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Overdue / Late Customers -->
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/90 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span class="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> អតិថិជនយឺតយ៉ាវថ្ងៃទី
+                    </span>
+                    <input type="date" id="dr-late-date" class="px-3 py-1.5 rounded-xl border border-amber-200 bg-white text-xs sm:text-sm font-medium outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="p-3 rounded-xl bg-white border border-amber-200/80 space-y-2">
+                        <div class="text-xs font-bold text-amber-800">🔸 Par1day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-late-p1-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                            <input type="number" id="dr-late-p1-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-amber-200/80 space-y-2">
+                        <div class="text-xs font-bold text-amber-800">🔸 Par30day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-late-p30-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                            <input type="number" id="dr-late-p30-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-amber-200/80 space-y-2">
+                        <div class="text-xs font-bold text-amber-800">🔸 Par90day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-late-p90-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                            <input type="number" id="dr-late-p90-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Collection Plan -->
+            <div class="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-sm font-bold text-emerald-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-thumbtack text-emerald-600"></i> ផែនការប្រមូលថ្ងៃទី
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyLateToCollection()" class="px-2.5 py-1.5 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-semibold transition flex items-center gap-1 cursor-pointer">
+                            <i class="fa-solid fa-clone"></i>
+                            <span>ចម្លងពីយឺតយ៉ាវ</span>
+                        </button>
+                        <input type="date" id="dr-coll-date" class="px-3 py-1.5 rounded-xl border border-emerald-200 bg-white text-xs sm:text-sm font-medium outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-2">
+                        <div class="text-xs font-bold text-emerald-800">🔹 Par1day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-coll-p1-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                            <input type="number" id="dr-coll-p1-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-2">
+                        <div class="text-xs font-bold text-emerald-800">🔹 Par30day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-coll-p30-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                            <input type="number" id="dr-coll-p30-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200/80 space-y-2">
+                        <div class="text-xs font-bold text-emerald-800">🔹 Par90day</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="dr-coll-p90-acc" min="0" placeholder="acc" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                            <input type="number" id="dr-coll-p90-amt" min="0" step="any" placeholder="$" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-semibold outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Preview Button -->
+            <div class="pt-1 flex justify-end">
+                <button type="button" onclick="generateDailyReport()" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>ពិនិត្យសារជាមុន (Preview)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 2: ផែនការប្រចាំថ្ងៃ (DAILY PLAN - KM & EN) -->
+        <!-- ========================================================= -->
+        <section id="panel-daily-plan" class="tab-panel hidden glass-card rounded-2xl p-4 sm:p-6 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800">ផែនការប្រចាំថ្ងៃ (Daily Plan)</h2>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="date" id="dp-date" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm font-medium outline-none focus:border-teal-500">
+                    <!-- Language Toggle -->
+                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                        <button type="button" id="dp-lang-km" onclick="setDailyPlanLang('km')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition cursor-pointer">
+                            ខ្មែរ
+                        </button>
+                        <button type="button" id="dp-lang-en" onclick="setDailyPlanLang('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                            English
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loan Check & Survey Loan Side-by-Side on Desktop -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Loan Check Card -->
+                <div class="p-4 rounded-2xl bg-sky-50/50 border border-sky-200/90 space-y-3.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-sm font-bold text-sky-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-circle-check text-sky-600"></i> Loan Check
+                        </h3>
+                        <div class="inline-flex rounded-xl bg-white p-1 border border-sky-200">
+                            <button type="button" id="lc-status-yes" onclick="toggleDailyPlanSection('lc', true)" class="px-3 py-1 rounded-lg text-xs font-bold bg-sky-600 text-white transition cursor-pointer">
+                                មាន
+                            </button>
+                            <button type="button" id="lc-status-no" onclick="toggleDailyPlanSection('lc', false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                                មិនមាន
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="lc-none-box" class="hidden py-6 px-4 rounded-xl bg-white/80 border border-dashed border-sky-200 text-center text-xs font-semibold text-slate-500">
+                        មិនមាន (None)
+                    </div>
+
+                    <div id="lc-details" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label for="lc-acc" class="block text-xs font-semibold text-slate-700 mb-1">ចំនួន (acc)</label>
+                                <input type="number" id="lc-acc" min="0" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-white text-sm font-semibold outline-none focus:border-sky-500">
+                            </div>
+                            <div>
+                                <label for="lc-total-amt" class="block text-xs font-semibold text-slate-700 mb-1">ទំហំកម្ចី ($)</label>
+                                <input type="number" id="lc-total-amt" min="0" step="any" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-white text-sm font-semibold outline-none focus:border-sky-500">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 bg-white p-3 rounded-xl border border-sky-100">
+                            <div class="text-xs font-bold text-slate-700">ប្រភេទកម្ចី និងទំហំតាមប្រភេទ ($)</div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="lc-type-il" onchange="toggleTypeInput('lc', 'il')" class="rounded text-sky-600 focus:ring-sky-500">
+                                    <span>IL</span>
+                                </label>
+                                <input type="number" id="lc-amt-il" min="0" step="any" disabled oninput="autoSumLoanTypes('lc')" placeholder="ទំហំ IL ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-sky-500">
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="lc-type-ilu" onchange="toggleTypeInput('lc', 'ilu')" class="rounded text-sky-600 focus:ring-sky-500">
+                                    <span>IL-Unsecured</span>
+                                </label>
+                                <input type="number" id="lc-amt-ilu" min="0" step="any" disabled oninput="autoSumLoanTypes('lc')" placeholder="ទំហំ IL-Unsecured ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-sky-500">
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="lc-type-atl" onchange="toggleTypeInput('lc', 'atl')" class="rounded text-sky-600 focus:ring-sky-500">
+                                    <span>ATL</span>
+                                </label>
+                                <input type="number" id="lc-amt-atl" min="0" step="any" disabled oninput="autoSumLoanTypes('lc')" placeholder="ទំហំ ATL ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-sky-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="lc-village" class="block text-xs font-semibold text-slate-700 mb-1">ភូមិ (រាជធានីភ្នំពេញ)</label>
+                            <div class="relative village-picker-wrap">
+                                <input type="text" id="lc-village" autocomplete="off" placeholder="វាយអក្សរដើម្បីបង្ហាញភូមិ ឬវាយបន្ត..." class="village-input w-full px-3 py-2 rounded-xl border border-sky-200 bg-white text-xs sm:text-sm outline-none focus:border-sky-500">
+                                <div class="village-suggestion-box hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Survey Loan Card -->
+                <div class="p-4 rounded-2xl bg-purple-50/50 border border-purple-200/90 space-y-3.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-sm font-bold text-purple-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-magnifying-glass-location text-purple-600"></i> Survey Loan
+                        </h3>
+                        <div class="inline-flex rounded-xl bg-white p-1 border border-purple-200">
+                            <button type="button" id="sl-status-yes" onclick="toggleDailyPlanSection('sl', true)" class="px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white transition cursor-pointer">
+                                មាន
+                            </button>
+                            <button type="button" id="sl-status-no" onclick="toggleDailyPlanSection('sl', false)" class="px-3 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer">
+                                មិនមាន
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="sl-none-box" class="hidden py-6 px-4 rounded-xl bg-white/80 border border-dashed border-purple-200 text-center text-xs font-semibold text-slate-500">
+                        មិនមាន (None)
+                    </div>
+
+                    <div id="sl-details" class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label for="sl-acc" class="block text-xs font-semibold text-slate-700 mb-1">ចំនួន (acc)</label>
+                                <input type="number" id="sl-acc" min="0" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white text-sm font-semibold outline-none focus:border-purple-500">
+                            </div>
+                            <div>
+                                <label for="sl-total-amt" class="block text-xs font-semibold text-slate-700 mb-1">ទំហំកម្ចី ($)</label>
+                                <input type="number" id="sl-total-amt" min="0" step="any" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-purple-200 bg-white text-sm font-semibold outline-none focus:border-purple-500">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 bg-white p-3 rounded-xl border border-purple-100">
+                            <div class="text-xs font-bold text-slate-700">ប្រភេទកម្ចី និងទំហំតាមប្រភេទ ($)</div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="sl-type-il" onchange="toggleTypeInput('sl', 'il')" class="rounded text-purple-600 focus:ring-purple-500">
+                                    <span>IL</span>
+                                </label>
+                                <input type="number" id="sl-amt-il" min="0" step="any" disabled oninput="autoSumLoanTypes('sl')" placeholder="ទំហំ IL ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-purple-500">
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="sl-type-ilu" onchange="toggleTypeInput('sl', 'ilu')" class="rounded text-purple-600 focus:ring-purple-500">
+                                    <span>IL-Unsecured</span>
+                                </label>
+                                <input type="number" id="sl-amt-ilu" min="0" step="any" disabled oninput="autoSumLoanTypes('sl')" placeholder="ទំហំ IL-Unsecured ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-purple-500">
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="sl-type-atl" onchange="toggleTypeInput('sl', 'atl')" class="rounded text-purple-600 focus:ring-purple-500">
+                                    <span>ATL</span>
+                                </label>
+                                <input type="number" id="sl-amt-atl" min="0" step="any" disabled oninput="autoSumLoanTypes('sl')" placeholder="ទំហំ ATL ($)" class="w-36 px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold disabled:bg-slate-100 outline-none focus:border-purple-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="sl-village" class="block text-xs font-semibold text-slate-700 mb-1">ភូមិ (រាជធានីភ្នំពេញ)</label>
+                            <div class="relative village-picker-wrap">
+                                <input type="text" id="sl-village" autocomplete="off" placeholder="វាយអក្សរដើម្បីបង្ហាញភូមិ ឬវាយបន្ត..." class="village-input w-full px-3 py-2 rounded-xl border border-purple-200 bg-white text-xs sm:text-sm outline-none focus:border-purple-500">
+                                <div class="village-suggestion-box hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Preview Button -->
+            <div class="pt-1 flex justify-end">
+                <button type="button" onclick="generateDailyPlan()" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>ពិនិត្យសារជាមុន (Preview)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PANEL 3: ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (WEEKLY PLAN - KM & EN) -->
+        <!-- ========================================================= -->
+        <section id="panel-weekly-plan" class="tab-panel hidden glass-card rounded-2xl p-4 sm:p-6 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-calendar-week"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800">ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (Weekly Plan)</h2>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="addWeeklyRow()" class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>បន្ថែមជួរភូមិ</span>
+                    </button>
+                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                        <button type="button" id="wp-lang-km" onclick="setWeeklyPlanLang('km')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition cursor-pointer">
+                            ខ្មែរ
+                        </button>
+                        <button type="button" id="wp-lang-en" onclick="setWeeklyPlanLang('en')" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                            English
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Village Rows -->
+            <div id="weekly-rows-container" class="space-y-3"></div>
+
+            <!-- Weekly Totals Summary Bar -->
+            <div class="p-3.5 rounded-2xl bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-bold">
+                <span><i class="fa-solid fa-calculator text-amber-400 mr-1.5"></i> សរុបផែនការប្រចាំសប្តាហ៍៖</span>
+                <div class="flex items-center gap-4">
+                    <span>ចំនួន៖ <span id="wp-sum-acc" class="text-amber-300">0</span> acc</span>
+                    <span>ទំហំ៖ <span id="wp-sum-amt" class="text-emerald-300">0</span>$</span>
+                </div>
+            </div>
+
+            <!-- Bottom Preview Button -->
+            <div class="pt-1 flex justify-end">
+                <button type="button" onclick="generateWeeklyPlan()" class="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>ពិនិត្យសារជាមុន (Preview)</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MESSAGE PREVIEW MODAL (ពិនិត្យសារជាមុន + COPY, PDF, TELEGRAM) -->
+    <!-- ========================================================= -->
+    <div id="preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
+            <div class="bg-gradient-to-r from-brand-900 to-brand-700 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                    </span>
+                    <div>
+                        <h3 id="modal-title" class="font-bold text-base">ពិនិត្យសារជាមុន</h3>
+                        <p class="text-[11px] text-blue-100">អាចកែសម្រួលអត្ថបទមុនពេលចម្លង ទាញយក PDF ឬផ្ញើចូល Telegram</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <textarea id="preview-message-box" rows="13" class="w-full p-4 rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:border-brand-500 outline-none text-xs sm:text-sm leading-relaxed font-medium text-slate-800"></textarea>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <button type="button" onclick="copyPreviewText()" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copy អត្ថបទ</span>
+                    </button>
+                    <button type="button" onclick="downloadFormattedPDF()" class="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>ទាញយក PDF</span>
+                    </button>
+                    <button type="button" id="btn-send-telegram" onclick="sendToTelegram()" class="py-2.5 px-4 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-brands fa-telegram text-base"></i>
+                        <span>ផ្ញើចូល Telegram</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- ADMIN LOGIN MODAL (ការចូលគណនី Admin សម្រាប់មុខងារកំណត់) -->
+    <!-- ========================================================= -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-gradient-to-r from-slate-900 to-brand-800 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-amber-300"></i>
+                    <h3 class="font-bold text-sm sm:text-base">ចូលប្រើមុខងារកំណត់ (Admin)</h3>
+                </div>
+                <button type="button" onclick="closeAdminLoginModal()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-3.5">
+                <div>
+                    <label for="admin-login-user" class="block text-xs font-bold text-slate-700 mb-1">User Admin</label>
+                    <input type="text" id="admin-login-user" placeholder="បញ្ចូល User Admin" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label for="admin-login-pass" class="block text-xs font-bold text-slate-700 mb-1">ពាក្យសម្ងាត់ (Password)</label>
+                    <input type="password" id="admin-login-pass" placeholder="បញ្ចូលពាក្យសម្ងាត់" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:border-brand-500">
+                </div>
+                <button type="button" onclick="verifyAdminLogin()" class="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm transition cursor-pointer">
+                    ចូលប្រើប្រាស់
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- ADMIN SETTINGS MODAL (កំណត់ Telegram & ព័ត៌មានជំនួយ) -->
+    <!-- ========================================================= -->
+    <div id="admin-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
+            <div class="bg-gradient-to-r from-brand-900 to-indigo-800 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-sliders text-amber-300"></i>
+                    <div>
+                        <h3 class="font-bold text-base">ការកំណត់ប្រព័ន្ធ (Admin Settings)</h3>
+                        <p class="text-[11px] text-blue-100">កំណត់ Telegram Bot និងកែប្រែព័ត៌មានជំនួយ</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAdminSettingsModal()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 max-h-[78vh] overflow-y-auto">
+                <!-- Telegram Bot Config -->
+                <div class="p-4 rounded-2xl bg-sky-50/60 border border-sky-200 space-y-3">
+                    <div class="text-xs font-bold text-sky-950 flex items-center gap-1.5">
+                        <i class="fa-brands fa-telegram text-sky-600 text-sm"></i> កំណត់ Telegram Bot API
+                    </div>
+                    <div>
+                        <label for="admin-tg-token" class="block text-xs font-semibold text-slate-700 mb-1">Bot Token</label>
+                        <input type="text" id="admin-tg-token" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-white text-xs sm:text-sm outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label for="admin-tg-chat" class="block text-xs font-semibold text-slate-700 mb-1">Chat ID</label>
+                        <input type="text" id="admin-tg-chat" placeholder="-1001234567890" class="w-full px-3 py-2 rounded-xl border border-sky-200 bg-white text-xs sm:text-sm outline-none focus:border-sky-500">
+                    </div>
+                </div>
+
+                <!-- Help Contacts Config -->
+                <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+                    <div class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-headset text-emerald-600"></i> កែប្រែទិន្នន័យក្នុងមុខងារជំនួយ
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label for="admin-help-phone" class="block text-xs font-semibold text-slate-700 mb-1">លេខទូរសព្ទ</label>
+                            <input type="text" id="admin-help-phone" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs sm:text-sm outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label for="admin-help-telegram" class="block text-xs font-semibold text-slate-700 mb-1">Telegram</label>
+                            <input type="text" id="admin-help-telegram" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs sm:text-sm outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label for="admin-help-facebook" class="block text-xs font-semibold text-slate-700 mb-1">Facebook</label>
+                            <input type="text" id="admin-help-facebook" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs sm:text-sm outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label for="admin-help-social" class="block text-xs font-semibold text-slate-700 mb-1">បណ្តាញសង្គមផ្សេងៗ</label>
+                            <input type="text" id="admin-help-social" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-xs sm:text-sm outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-1">
+                    <button type="button" onclick="closeAdminSettingsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition cursor-pointer">
+                        បោះបង់
+                    </button>
+                    <button type="button" onclick="saveAllAdminSettings()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>រក្សាទុកការកំណត់</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- HELP MODAL (មុខងារជំនួយ - Read-Only for User, Editable for Admin) -->
+    <!-- ========================================================= -->
+    <div id="help-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/65 backdrop-blur-sm p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto">
+            <div class="bg-gradient-to-r from-emerald-800 to-teal-700 text-white px-5 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-headset"></i>
+                    </span>
+                    <div>
+                        <h3 class="font-bold text-base">ជំនួយ (Help)</h3>
+                        <p id="help-modal-subtitle" class="text-[11px] text-emerald-100">ព័ត៌មានទំនាក់ទំនងជំនួយ (User មិនអាចកែតម្រូវបាន)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeHelpModal()" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 max-h-[78vh] overflow-y-auto">
+                <!-- Support Channels (Read-Only for User, Editable when Admin is logged in) -->
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-address-book text-emerald-600"></i> បណ្តាញទំនាក់ទំនងជំនួយ
+                        </span>
+                        <span id="help-mode-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-semibold">
+                            <i class="fa-solid fa-lock mr-1"></i>រក្សាទុកថេរ (User Locked)
+                        </span>
+                    </div>
+
+                    <div id="help-contacts-display" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div id="help-admin-save-row" class="hidden pt-1 flex justify-end">
+                        <button type="button" onclick="saveHelpFromModal()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>រក្សាទុកការកែប្រែជំនួយ</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-1">
+                    <button type="button" onclick="closeHelpModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm transition">
+                        បិទផ្ទាំងជំនួយ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Offscreen PDF Template Container -->
+    <div id="pdf-render-wrapper" style="position: fixed; left: -9999px; top: 0; width: 794px; background: white; z-index: -1;"></div>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-400 py-4 px-4">
+        ប្រព័ន្ធជំនួយការងារបុគ្គលិកកម្ចី SME / FSA-S • រាជធានីភ្នំពេញ
+    </footer>
+
+    <script>
+        // =========================================================================
+        // 1. COMPREHENSIVE PHNOM PENH ADMINISTRATIVE DATA (14 KHANS / 105 SANGKATS / VILLAGES)
+        // =========================================================================
+        const PHNOM_PENH_ADMIN = [
+            { khan: "ខណ្ឌចំការមន", sangkats: [
+                { name: "សង្កាត់ទន្លេបាសាក់", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦"] },
+                { name: "សង្កាត់បឹងត្របែក", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] },
+                { name: "សង្កាត់ទួលទំពូងទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥"] },
+                { name: "សង្កាត់ទួលទំពូងទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤"] },
+                { name: "សង្កាត់ផ្សារដើមថ្កូវ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧"] }
+            ]},
+            { khan: "ខណ្ឌដូនពេញ", sangkats: [
+                { name: "សង្កាត់ផ្សារថ្មីទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១"] },
+                { name: "សង្កាត់ផ្សារថ្មីទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] },
+                { name: "សង្កាត់ផ្សារថ្មីទី៣", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២"] },
+                { name: "សង្កាត់បឹងរាំង", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០"] },
+                { name: "សង្កាត់ផ្សារកណ្តាលទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤"] },
+                { name: "សង្កាត់ផ្សារកណ្តាលទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០"] },
+                { name: "សង្កាត់ចតុមុខ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] },
+                { name: "សង្កាត់ជ័យជំនះ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១"] },
+                { name: "សង្កាត់ផ្សារចាស់", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០"] },
+                { name: "សង្កាត់ស្រះចក", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦", "ភូមិ១៧", "ភូមិ១៨", "ភូមិ១៩", "ភូមិ២០", "ភូមិ២១", "ភូមិ២២", "ភូមិ២៣", "ភូមិ២៤"] },
+                { name: "សង្កាត់វត្តភ្នំ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] }
+            ]},
+            { khan: "ខណ្ឌ៧មករា", sangkats: [
+                { name: "សង្កាត់អូរឫស្សីទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦"] },
+                { name: "សង្កាត់អូរឫស្សីទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] },
+                { name: "សង្កាត់អូរឫស្សីទី៣", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦"] },
+                { name: "សង្កាត់អូរឫស្សីទី៤", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] },
+                { name: "សង្កាត់មនោរម្យ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] },
+                { name: "សង្កាត់មិត្តភាព", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០"] },
+                { name: "សង្កាត់វាលវង់", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២"] },
+                { name: "សង្កាត់បឹងព្រលិត", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨"] }
+            ]},
+            { khan: "ខណ្ឌទួលគោក", sangkats: [
+                { name: "សង្កាត់ផ្សារដេប៉ូទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០"] },
+                { name: "សង្កាត់ផ្សារដេប៉ូទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១"] },
+                { name: "សង្កាត់ផ្សារដេប៉ូទី៣", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] },
+                { name: "សង្កាត់ទឹកល្អក់ទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦"] },
+                { name: "សង្កាត់ទឹកល្អក់ទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣"] },
+                { name: "សង្កាត់ទឹកល្អក់ទី៣", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣"] },
+                { name: "សង្កាត់បឹងកក់ទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤"] },
+                { name: "សង្កាត់បឹងកក់ទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦", "ភូមិ១៧", "ភូមិ១៨", "ភូមិ១៩", "ភូមិ២០", "ភូមិ២១", "ភូមិ២២", "ភូមិ២៣"] },
+                { name: "សង្កាត់ផ្សារដើមគរ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦"] },
+                { name: "សង្កាត់បឹងសាឡាង", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១", "ភូមិ១២", "ភូមិ១៣", "ភូមិ១៤", "ភូមិ១៥", "ភូមិ១៦", "ភូមិ១៧"] }
+            ]},
+            { khan: "ខណ្ឌដង្កោ", sangkats: [
+                { name: "សង្កាត់ដង្កោ", villages: ["ភូមិខ្វា", "ភូមិម័ល", "ភូមិសំបួរ", "ភូមិថ្មី", "ភូមិតាឡី", "ភូមិបាគូ"] },
+                { name: "សង្កាត់ពងទឹក", villages: ["ភូមិពងទឹក", "ភូមិត្រពាំងគល់", "ភូមិវត្តស្លែង", "ភូមិត្រពាំងសាលា", "ភូមិឃ្លាំងសម្បត្តិ", "ភូមិអង្គកែវ", "ភូមិស្រែញរ", "ភូមិត្រពាំងថ្លឹង", "ភូមិព្រៃទទឹង", "ភូមិចំការឪឡឹក"] },
+                { name: "សង្កាត់ព្រៃវែង", villages: ["ភូមិព្រៃវែងខាងកើត", "ភូមិព្រៃវែងខាងលិច", "ភូមិត្រពាំងចក", "ភូមិរលួស", "ភូមិទួលសំបូរ", "ភូមិកំរៀង", "ភូមិសេរីដីដុះ", "ភូមិក្រាំងស្វាយ", "ភូមិព្រៃធំ"] },
+                { name: "សង្កាត់ព្រៃស", villages: ["ភូមិព្រៃសខាងកើត", "ភូមិព្រៃសខាងលិច", "ភូមិប្រការ", "ភូមិធម្មត្រ័យ", "ភូមិព្រៃធំ", "ភូមិគោកបន្ទាយ", "ភូមិពាម", "ភូមិអំពិល", "ភូមិក្រាំងស្វាយ", "ភូមិថ្មី", "ភូមិព្រៃទីទុយ", "ភូមិទួលពង្រ"] },
+                { name: "សង្កាត់ក្រាំងពង្រ", villages: ["ភូមិក្រាំងពង្រ", "ភូមិទឹកថ្លា", "ភូមិត្រពាំងសំរិត", "ភូមិព្រៃស្វាយ"] },
+                { name: "សង្កាត់ប្រទះឡាង", villages: ["ភូមិប្រទះឡាង", "ភូមិអង្គ", "ភូមិភា", "ភូមិគោកខ្សាច់", "ភូមិត្រពាំងរំចេក", "ភូមិតាពេជ្រ", "ភូមិខ្វិត"] },
+                { name: "សង្កាត់សាក់សំពៅ", villages: ["ភូមិសាក់សំពៅ", "ភូមិពោធិ៍រលំ", "ភូមិគោកព្រេច", "ភូមិខ្វិត", "ភូមិក្រាំងស្វាយ", "ភូមិព្រៃវែង", "ភូមិសំបួរ"] },
+                { name: "សង្កាត់ជើងឯក", villages: ["ភូមិជើងឯក", "ភូមិស្រុកចេក", "ភូមិបូរីកម្មករ", "ភូមិរលួស"] },
+                { name: "សង្កាត់គងនយ", villages: ["ភូមិគងនយ", "ភូមិសៀមរាប", "ភូមិត្រពាំងស្វាយ", "ភូមិវាលថ្លាន់"] },
+                { name: "សង្កាត់ព្រែកកំពឹស", villages: ["ភូមិព្រែកកំពឹស", "ភូមិព្រែករទាំង", "ភូមិព្រែកថ្លឹង", "ភូមិស្រីស្នំ", "ភូមិដំណាក់សង្កែ", "ភូមិក្រាំងស្វាយ"] },
+                { name: "សង្កាត់រលួស", villages: ["ភូមិកំពង់ក្តុល", "ភូមិព្រះធាតុ", "ភូមិក្រាំងស្វាយ"] },
+                { name: "សង្កាត់ស្ពានថ្ម", villages: ["ភូមិស្ពានថ្ម", "ភូមិដូង", "ភូមិម៉ឺនត្រា", "ភូមិព្រែកជ្រៃ", "ភូមិហារ", "ភូមិអញ្ចាញ", "ភូមិស្វាយមាស", "ភូមិគោកឪឡឹក"] },
+                { name: "សង្កាត់ទៀន", villages: ["ភូមិទៀន", "ភូមិក្រាំង", "ភូមិថ្មី", "ភូមិសាលា", "ភូមិកណ្តាល", "ភូមិវាល"] }
+            ]},
+            { khan: "ខណ្ឌមានជ័យ", sangkats: [
+                { name: "សង្កាត់ស្ទឹងមានជ័យទី១", villages: ["ភូមិមានជ័យ", "ភូមិមានជ័យ១", "ភូមិទ្រា", "ភូមិទ្រា១", "ភូមិទ្រា២", "ភូមិទ្រា៣", "ភូមិថ្មី", "ភូមិសំបួរ"] },
+                { name: "សង្កាត់ស្ទឹងមានជ័យទី២", villages: ["ភូមិឫស្សី", "ភូមិឫស្សី១", "ភូមិឫស្សី២", "ភូមិឫស្សី៣", "ភូមិព្រែកទាល់", "ភូមិព្រែកទាល់១", "ភូមិដំណាក់ធំ", "ភូមិដំណាក់ធំ១"] },
+                { name: "សង្កាត់ស្ទឹងមានជ័យទី៣", villages: ["ភូមិដំណាក់ធំ២", "ភូមិដំណាក់ធំ៣", "ភូមិដំណាក់ធំ៤", "ភូមិដំណាក់ធំ៥", "ភូមិទ្រា៤", "ភូមិឫស្សី៤"] },
+                { name: "សង្កាត់បឹងទំពុនទី១", villages: ["ភូមិចំរើនផល", "ភូមិចំរើនផល១", "ភូមិសន្សំកុសល១", "ភូមិសន្សំកុសល២", "ភូមិសន្សំកុសល៣", "ភូមិសន្សំកុសល៤", "ភូមិសន្សំកុសល៥", "ភូមិក្បាលទំនប់", "ភូមិក្បាលទំនប់១", "ភូមិក្បាលទំនប់២", "ភូមិក្បាលទំនប់៣"] },
+                { name: "សង្កាត់បឹងទំពុនទី២", villages: ["ភូមិត្នោតជ្រុំ", "ភូមិត្នោតជ្រុំ១", "ភូមិត្នោតជ្រុំ២", "ភូមិត្នោតជ្រុំ៣", "ភូមិត្នោតជ្រុំ៤", "ភូមិត្នោតជ្រុំ៥", "ភូមិត្នោតជ្រុំ៦", "ភូមិក្បាលទំនប់៤", "ភូមិសន្សំកុសល៦"] },
+                { name: "សង្កាត់ចាក់អង្រែលើ", villages: ["ភូមិព្រែកតាគង់", "ភូមិព្រែកតាគង់១", "ភូមិព្រែកតាគង់២", "ភូមិព្រែកតាគង់៣", "ភូមិព្រែកតាឡុង", "ភូមិព្រែកតាឡុង១", "ភូមិព្រែកតាឡុង២"] },
+                { name: "សង្កាត់ចាក់អង្រែក្រោម", villages: ["ភូមិព្រែកតាឡុង៣", "ភូមិទួលរកា", "ភូមិទួលរកា១", "ភូមិទួលរកា២", "ភូមិទួលរកា៣"] }
+            ]},
+            { khan: "ខណ្ឌឫស្សីកែវ", sangkats: [
+                { name: "សង្កាត់ស្វាយប៉ាក", villages: ["ភូមិស្វាយប៉ាក", "ភូមិឡកំបោរ", "ភូមិលូ"] },
+                { name: "សង្កាត់គីឡូម៉ែត្រលេខ៦", villages: ["ភូមិក្រោលគោ", "ភូមិស្ពានខ្ពស់", "ភូមិបឹងឈូក"] },
+                { name: "សង្កាត់ឫស្សីកែវ", villages: ["ភូមិឃ្លាំងសាំង", "ភូមិមិត្តភាព", "ភូមិសាមគ្គី", "ភូមិបឹងសាឡាង"] },
+                { name: "សង្កាត់ច្រាំងចំរេះទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤"] },
+                { name: "សង្កាត់ច្រាំងចំរេះទី២", villages: ["ភូមិក", "ភូមិខ", "ភូមិគ", "ភូមិឃ"] },
+                { name: "សង្កាត់ទួលសង្កែទី១", villages: ["ភូមិទួលសង្កែ", "ភូមិទួលគោក", "ភូមិចុងខ្សាច់", "ភូមិបាក់ទូក"] },
+                { name: "សង្កាត់ទួលសង្កែទី២", villages: ["ភូមិពោងពាយ", "ភូមិផ្សារតូច", "ភូមិទួលសំពៅ", "ភូមិក្រោលគោ"] }
+            ]},
+            { khan: "ខណ្ឌសែនសុខ", sangkats: [
+                { name: "សង្កាត់ភ្នំពេញថ្មី", villages: ["ភូមិភ្នំពេញថ្មី", "ភូមិរោងចក្រ", "ភូមិទំនប់", "ភូមិដីថ្មី", "ភូមិពោងពាយ", "ភូមិបាយ៉ាប", "ភូមិច្រេះ", "ភូមិគោកឃ្លាង", "ភូមិទំនប់១", "ភូមិរោងចក្រ១"] },
+                { name: "សង្កាត់ទឹកថ្លា", villages: ["ភូមិទឹកថ្លា", "ភូមិផ្សារទឹកថ្លា", "ភូមិបុរី១០០ខ្នង", "ភូមិសេប៉េសេ", "ភូមិចុងថ្នល់ខាងកើត", "ភូមិចុងថ្នល់ខាងលិច", "ភូមិស្លែងរលើង", "ភូមិត្រពាំងឈូក", "ភូមិអូរបែកក្អម"] },
+                { name: "សង្កាត់ឃ្មួញ", villages: ["ភូមិឃ្មួញ", "ភូមិបន្លាស្អិត", "ភូមិសំរោង", "ភូមិអន្លង់ក្ងាន", "ភូមិត្រពាំងរាំង", "ភូមិត្រពាំងរាំងថ្មី", "ភូមិសែនសុខ១", "ភូមិសែនសុខ២", "ភូមិសែនសុខ៣", "ភូមិសែនសុខ៤", "ភូមិសែនសុខ៥", "ភូមិសែនសុខ៦", "ភូមិសែនសុខ៧", "ភូមិសែនសុខ៨"] },
+                { name: "សង្កាត់ក្រាំងធ្នង់", villages: ["ភូមិក្រាំងធ្នង់", "ភូមិត្រពាំងមាន", "ភូមិវិមានទ្រង់", "ភូមិព្រៃល្វា", "ភូមិក្រាំងអង្ក្រង", "ភូមិសំរោងទាវ", "ភូមិជ្រៃកោង", "ភូមិត្រពាំងជើងស្រុក"] },
+                { name: "សង្កាត់អូរបែកក្អម", villages: ["ភូមិអូរបែកក្អម", "ភូមិទ្រុងមាន់", "ភូមិស្លែងរលើង", "ភូមិត្រពាំងឈូក"] },
+                { name: "សង្កាត់គោកឃ្លាង", villages: ["ភូមិគោកឃ្លាង", "ភូមិដីថ្មី", "ភូមិរោងចក្រ", "ភូមិច្រេះ"] }
+            ]},
+            { khan: "ខណ្ឌពោធិ៍សែនជ័យ", sangkats: [
+                { name: "សង្កាត់ត្រពាំងក្រសាំង", villages: ["ភូមិត្រពាំងក្រសាំង", "ភូមិសំរោង", "ភូមិត្រពាំងទា", "ភូមិជ្រៃកោង", "ភូមិវាល", "ភូមិក្រាំង", "ភូមិព្រៃដូនអុក", "ភូមិត្រពាំងអណ្តូង", "ភូមិខ្មែរលើ", "ភូមិអក្សរ", "ភូមិកុលបុត្រ", "ភូមិថ្មី", "ភូមិព្រៃស្ពឺ", "ភូមិសាមគ្គី១", "ភូមិសាមគ្គី២", "ភូមិសាមគ្គី៣", "ភូមិសាមគ្គី៤", "ភូមិសាមគ្គី៥", "ភូមិសាមគ្គី៦"] },
+                { name: "សង្កាត់កន្ទោក", villages: ["ភូមិកន្ទោកជើង", "ភូមិកន្ទោកត្បូង", "ភូមិត្រពាំងគល់", "ភូមិត្រពាំងឈូក", "ភូមិគល់", "ភូមិស្ងួនពេជ្រ", "ភូមិអង្គ", "ភូមិថ្មី", "ភូមិស្រែក្នុង", "ភូមិត្រពាំងពោធិ៍", "ភូមិកំរៀង", "ភូមិបឹងធំ", "ភូមិព្រៃបឹង"] },
+                { name: "សង្កាត់កំបូល", villages: ["ភូមិកំបូល", "ភូមិអំពិល", "ភូមិស្នួលខ្ពស់", "ភូមិតាកេរ្តិ៍", "ភូមិតានួន", "ភូមិត្រពាំងទួល", "ភូមិផ្សារកំបូល", "ភូមិកណ្តាល", "ភូមិត្រពាំងពោធិ៍", "ភូមិស្វាយ", "ភូមិលិចវត្ត", "ភូមិកើតវត្ត", "ភូមិព្រៃសណ្តែក", "ភូមិសាលា", "ភូមិថ្មី", "ភូមិជម្ពូវ័ន", "ភូមិត្រពាំងគល់", "ភូមិបឹងធំ"] },
+                { name: "សង្កាត់ចោមចៅទី១", villages: ["ភូមិត្រពាំងថ្លឹង១", "ភូមិត្រពាំងថ្លឹង២", "ភូមិត្រពាំងថ្លឹង៣", "ភូមិត្រពាំងថ្លឹង៤", "ភូមិទួលពង្រ", "ភូមិគោកចំបក់", "ភូមិព្រៃល្ង", "ភូមិកាកាប"] },
+                { name: "សង្កាត់ចោមចៅទី២", villages: ["ភូមិព្រៃជីសាក់", "ភូមិព្រៃល្វា", "ភូមិដំណាក់ត្រយឹង", "ភូមិចោមចៅ១", "ភូមិចោមចៅ២", "ភូមិចោមចៅ៣", "ភូមិថ្មគោល១", "ភូមិថ្មគោល២", "ភូមិជ្រៃកោង", "ភូមិព្រៃសណ្តែក", "ភូមិទួលកី", "ភូមិអង្គកែវ", "ភូមិត្រពាំងរំចេក", "ភូមិលិចវត្ត", "ភូមិកើតវត្ត", "ភូមិវត្តស្លែង"] },
+                { name: "សង្កាត់ចោមចៅទី៣", villages: ["ភូមិជម្ពូវ័ន១", "ភូមិជម្ពូវ័ន២", "ភូមិព្រៃព្រីងជើង១", "ភូមិព្រៃព្រីងជើង២", "ភូមិព្រៃព្រីងត្បូង១", "ភូមិព្រៃព្រីងត្បូង២", "ភូមិថ្នល់បំបែក", "ភូមិអូរដឹម", "ភូមិត្រពាំងពោធិ៍", "ភូមិព្រៃស្វាយ", "ភូមិព្រៃទា១", "ភូមិព្រៃទា២", "ភូមិអង្គ", "ភូមិត្រពាំងជ្រៃ", "ភូមិគោកខ្សាច់"] },
+                { name: "សង្កាត់កាកាបទី១", villages: ["ភូមិកាកាប", "ភូមិប៉ប្រកជើង", "ភូមិប៉ប្រកត្បូង", "ភូមិតាងួន១", "ភូមិតាងួន២", "ភូមិត្រពាំងល្វា១", "ភូមិត្រពាំងល្វា២", "ភូមិក្បាលដំរី១", "ភូមិក្បាលដំរី២"] },
+                { name: "សង្កាត់កាកាបទី២", villages: ["ភូមិចំការឪឡឹក១", "ភូមិចំការឪឡឹក២", "ភូមិផ្សារកាកាប", "ភូមិត្រពាំងជ្រៃ", "ភូមិព្រៃសាឡាង", "ភូមិកាកាបថ្មី"] },
+                { name: "សង្កាត់សំរោងក្រោម", villages: ["ភូមិសំរោង", "ភូមិត្រពាំងធ្នង់", "ភូមិចំការស្បែង", "ភូមិអណ្តូងតាអន", "ភូមិត្រពាំងឈូក", "ភូមិកណ្តាល", "ភូមិក្រាំងស្វាយ", "ភូមិស្រែរាជ្ជៈ", "ភូមិព្រៃពពេល", "ភូមិសំរោងជើង", "ភូមិសំរោងត្បូង"] }
+            ]},
+            { khan: "ខណ្ឌជ្រោយចង្វារ", sangkats: [
+                { name: "សង្កាត់ជ្រោយចង្វារ", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិដើមគរ", "ភូមិគៀនឃ្លាំង"] },
+                { name: "សង្កាត់ព្រែកលៀប", villages: ["ភូមិព្រែកលៀប", "ភូមិក្តីចាស់", "ភូមិបាក់ខែង", "ភូមិគៀនឃ្លាំង"] },
+                { name: "សង្កាត់ព្រែកតាសេក", villages: ["ភូមិព្រែកតាសេក", "ភូមិព្រែករាំង", "ភូមិព្រែកតាគង់", "ភូមិដើមគរ", "ភូមិព្រែកតារ័ត្ន"] },
+                { name: "សង្កាត់កោះដាច់", villages: ["ភូមិកោះដាច់", "ភូមិល្វា", "ភូមិក្បាលកោះ", "ភូមិចុងកោះ", "ភូមិរនះ"] },
+                { name: "សង្កាត់បាក់ខែង", villages: ["ភូមិបាក់ខែងលើ", "ភូមិបាក់ខែងក្រោម", "ភូមិចំបក់មាស"] }
+            ]},
+            { khan: "ខណ្ឌព្រែកព្នៅ", sangkats: [
+                { name: "សង្កាត់ព្រែកព្នៅ", villages: ["ភូមិព្រែកព្នៅ", "ភូមិកណ្តាល", "ភូមិផ្សារលិច", "ភូមិពោធិ៍មង្គល", "ភូមិឌួង"] },
+                { name: "សង្កាត់ពញាពន់", villages: ["ភូមិពញាពន់", "ភូមិធំត្បូង", "ភូមិធំជើង", "ភូមិត្រពាំងស្នោ", "ភូមិស្រែដូនតូច", "ភូមិបឹង", "ភូមិវែង", "ភូមិព្រៃពង្រ"] },
+                { name: "សង្កាត់សំរោង", villages: ["ភូមិសំរោងជើង", "ភូមិសំរោងកណ្តាល", "ភូមិសំរោងត្បូង", "ភូមិគ្រួស"] },
+                { name: "សង្កាត់គោករកា", villages: ["ភូមិគោករកា", "ភូមិត្រពាំងពោធិ៍", "ភូមិភ្លូផ្អែម", "ភូមិអណ្តូង", "ភូមិត្រពាំងវែង", "ភូមិខ្មែរលើ", "ភូមិសំរោង", "ភូមិត្រពាំងស្វាយ", "ភូមិព្រៃធំ", "ភូមិកប់ស្រូវធំ", "ភូមិកប់ស្រូវតូច", "ភូមិបែកបក", "ភូមិត្រពាំងរនាម", "ភូមិធ្មៃ", "ភូមិជ្រៃមួយរយ", "ភូមិពុទ្រា", "ភូមិស្វាយចេក", "ភូមិទួលសំពៅ"] },
+                { name: "សង្កាត់ពន្សាំង", villages: ["ភូមិពន្សាំង", "ភូមិត្រពាំងទទឹង", "ភូមិស្វាយឧត្តម", "ភូមិចំបក់ពពេល", "ភូមិព្រៃស្វាយ", "ភូមិទួលត្បែង", "ភូមិកន្លែងគោ", "ភូមិបឹងខ្នំ", "ភូមិត្រពាំងរនាម", "ភូមិតាស្គរ", "ភូមិកោះរងៀង", "ភូមិថ្នល់បន្ទាយ", "ភូមិត្រពាំងស្គន់", "ភូមិព្រៃស្នួល", "ភូមិត្រពាំងអំពិល", "ភូមិកណ្តាល", "ភូមិបឹងធំ", "ភូមិដើមចាន់", "ភូមិសំរោង", "ភូមិទួលពង្រ", "ភូមិព្រៃទទឹង", "ភូមិត្រពាំងក្រសាំង", "ភូមិថ្មី", "ភូមិព្រៃដំរី"] }
+            ]},
+            { khan: "ខណ្ឌច្បារអំពៅ", sangkats: [
+                { name: "សង្កាត់ច្បារអំពៅទី១", villages: ["ភូមិព្រែក", "ភូមិព្រែក១", "ភូមិដើមម៉ាក់ក្លឿ", "ភូមិដើមអំពិល"] },
+                { name: "សង្កាត់ច្បារអំពៅទី២", villages: ["ភូមិដើមស្លែង", "ភូមិដើមចាន់", "ភូមិកណ្តាល", "ភូមិកណ្តាល១", "ភូមិដើមចាន់១", "ភូមិដើមស្លែង១"] },
+                { name: "សង្កាត់និរោធ", villages: ["ភូមិតាងៅ", "ភូមិតាងៅកណ្តាល", "ភូមិតាងៅក្រោម", "ភូមិបឹងឈូក", "ភូមិឫស្សីស្រស់", "ភូមិកោះនរា"] },
+                { name: "សង្កាត់ព្រែកប្រា", villages: ["ភូមិព្រែកតាពៅ", "ភូមិព្រែកតាពៅ១", "ភូមិអូរអណ្តូង", "ភូមិអូរអណ្តូង១", "ភូមិជ្រោយបាសាក់", "ភូមិជ្រោយបាសាក់១"] },
+                { name: "សង្កាត់វាលស្បូវ", villages: ["ភូមិវាលស្បូវ", "ភូមិក្តីតាកុយ", "ភូមិស្វាយតាអុក", "ភូមិព្រែកជាងព្រំ"] },
+                { name: "សង្កាត់ព្រែកឯង", villages: ["ភូមិមិត្តភាព", "ភូមិទួលតាចាន់", "ភូមិក្បាលជ្រោយ", "ភូមិតាព្រហ្ម", "ភូមិចុងព្រែក", "ភូមិបឹងក្រពើ"] },
+                { name: "សង្កាត់ក្បាលកោះ", villages: ["ភូមិជ្រោយអំពិល", "ភូមិជ្រោយអំពិល១", "ភូមិជ្រោយអំពិល២", "ភូមិយកបាត្រ", "ភូមិយកបាត្រ១", "ភូមិព្រែកធំ", "ភូមិព្រែកធំ១", "ភូមិព្រែកធំ២", "ភូមិកោះក្របី", "ភូមិកោះក្របី១"] },
+                { name: "សង្កាត់ព្រែកថ្មី", villages: ["ភូមិព្រែកថ្មី", "ភូមិកោះក្របី", "ភូមិចំពុះក្អែក"] }
+            ]},
+            { khan: "ខណ្ឌបឹងកេងកង", sangkats: [
+                { name: "សង្កាត់បឹងកេងកងទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] },
+                { name: "សង្កាត់បឹងកេងកងទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] },
+                { name: "សង្កាត់បឹងកេងកងទី៣", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩"] },
+                { name: "សង្កាត់អូឡាំពិក", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥"] },
+                { name: "សង្កាត់ទំនប់ទឹក", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥"] },
+                { name: "សង្កាត់ទួលស្វាយព្រៃទី១", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧"] },
+                { name: "សង្កាត់ទួលស្វាយព្រៃទី២", villages: ["ភូមិ១", "ភូមិ២", "ភូមិ៣", "ភូមិ៤", "ភូមិ៥", "ភូមិ៦", "ភូមិ៧", "ភូមិ៨", "ភូមិ៩", "ភូមិ១០", "ភូមិ១១"] }
+            ]},
+            { khan: "ខណ្ឌកំបូល", sangkats: [
+                { name: "សង្កាត់កំបូល", villages: ["ភូមិកំបូល", "ភូមិអំពិល", "ភូមិស្នួលខ្ពស់", "ភូមិតាកេរ្តិ៍", "ភូមិតានួន", "ភូមិត្រពាំងទួល", "ភូមិផ្សារកំបូល", "ភូមិកណ្តាល", "ភូមិត្រពាំងពោធិ៍", "ភូមិស្វាយ", "ភូមិលិចវត្ត", "ភូមិកើតវត្ត", "ភូមិព្រៃសណ្តែក", "ភូមិសាលា", "ភូមិថ្មី", "ភូមិជម្ពូវ័ន", "ភូមិត្រពាំងគល់", "ភូមិបឹងធំ"] },
+                { name: "សង្កាត់កន្ទោក", villages: ["ភូមិកន្ទោកជើង", "ភូមិកន្ទោកត្បូង", "ភូមិត្រពាំងគល់", "ភូមិត្រពាំងឈូក", "ភូមិគល់", "ភូមិស្ងួនពេជ្រ", "ភូមិអង្គ", "ភូមិថ្មី", "ភូមិស្រែក្នុង", "ភូមិត្រពាំងពោធិ៍", "ភូមិកំរៀង", "ភូមិបឹងធំ", "ភូមិព្រៃបឹង"] },
+                { name: "សង្កាត់ឪឡោក", villages: ["ភូមិឪឡោក", "ភូមិត្រពាំងកក់", "ភូមិត្រពាំងសុក្រំ", "ភូមិព្រៃរងៀង", "ភូមិបឹងកំបោរ", "ភូមិត្រពាំងរកា", "ភូមិព្រៃតាពៅ", "ភូមិត្បូងវត្ត", "ភូមិជើងវត្ត", "ភូមិស្រែអំបិល", "ភូមិព្រៃមាន់", "ភូមិត្រពាំងអំពិល", "ភូមិស្នួល", "ភូមិត្រពាំងទទឹង"] },
+                { name: "សង្កាត់ស្នោរ", villages: ["ភូមិស្នោរកើត", "ភូមិស្នោរលិច", "ភូមិពង្រ", "ភូមិព្រៃរងៀង", "ភូមិត្រពាំងក្រសាំង", "ភូមិស្រែក្នុង", "ភូមិផ្លូវភ្លោះ", "ភូមិអង្គស្នួល", "ភូមិទួលលៀប", "ភូមិកុលក្រស្នា", "ភូមិសាក់ប្រយុទ្ធ", "ភូមិស្វាយជ្រុំ", "ភូមិរំដួលជើង", "ភូមិរំដួលត្បូង", "ភូមិព្រៃបឹង", "ភូមិប្រាសាទ", "ភូមិតាអិន", "ភូមិកន្ទ្រង់"] },
+                { name: "សង្កាត់ភ្លើងឆេះរទេះ", villages: ["ភូមិភ្លើងឆេះរទេះកើត", "ភូមិភ្លើងឆេះរទេះលិច", "ភូមិទួលកី", "ភូមិត្រពាំងរំចេក", "ភូមិគោកខ្សាច់", "ភូមិព្រៃសណ្តែក", "ភូមិក្រាំងស្វាយ", "ភូមិអង្គកែវ"] },
+                { name: "សង្កាត់បឹងធំ", villages: ["ភូមិបឹងធំទី១", "ភូមិបឹងធំទី២", "ភូមិបឹងធំទី៣", "ភូមិដូនកុក", "ភូមិអន្លង់ស្វាយ", "ភូមិត្រពាំងក្រសាំង", "ភូមិព្រៃរំដួល", "ភូមិអំពិល", "ភូមិខ្ចៅ", "ភូមិចំបក់", "ភូមិតាភេម", "ភូមិស្រែជម្រៅ", "ភូមិត្រពាំងស្វាយ", "ភូមិក្តាន់", "ភូមិព្រៃចាស់"] },
+                { name: "សង្កាត់ប្រទះឡាង", villages: ["ភូមិប្រទះឡាង", "ភូមិអង្គ", "ភូមិភា", "ភូមិគោកខ្សាច់", "ភូមិត្រពាំងរំចេក", "ភូមិតាពេជ្រ", "ភូមិខ្វិត"] }
+            ]}
+        ];
+
+        // =========================================================================
+        // 2. GLOBAL STATE & INITIALIZATION
+        // =========================================================================
+        let dailyPlanLang = 'km';
+        let weeklyPlanLang = 'km';
+        let dailyPlanState = { lcHas: true, slHas: true };
+        let currentReportTitle = 'របាយការណ៍';
+        let flatPhnomPenhVillages = [];
+
+        function buildFlatVillageList() {
+            const seen = new Set();
+            const list = [];
+
+            PHNOM_PENH_ADMIN.forEach(khanObj => {
+                (khanObj.sangkats || []).forEach(sangkatObj => {
+                    (sangkatObj.villages || []).forEach(villageName => {
+                        const cleanVillage = String(villageName || '').trim();
+                        if (!cleanVillage) return;
+
+                        const normalizedVillage = cleanVillage.startsWith('ភូមិ')
+                            ? cleanVillage
+                            : `ភូមិ${cleanVillage}`;
+
+                        const key = `${normalizedVillage}__${sangkatObj.name}__${khanObj.khan}`;
+                        if (seen.has(key)) return;
+                        seen.add(key);
+
+                        const withoutPrefix = normalizedVillage.replace(/^ភូមិ\s*/, '').trim();
+                        list.push({
+                            village: normalizedVillage,
+                            withoutPrefix,
+                            sangkat: sangkatObj.name,
+                            khan: khanObj.khan,
+                            fullLabel: `${normalizedVillage} (${sangkatObj.name}, ${khanObj.khan})`,
+                            searchText: `${normalizedVillage} ${withoutPrefix} ${sangkatObj.name} ${khanObj.khan}`.toLowerCase()
+                        });
+                    });
+                });
+            });
+
+            flatPhnomPenhVillages = list;
+        }
+
+        const STORAGE_KEY_STAFF = 'sme_pp_staff_profiles_v1';
+        const STORAGE_KEY_TG = 'sme_pp_telegram_cfg_v1';
+        const STORAGE_KEY_HELP = 'sme_pp_help_contacts_v1';
+        const ADMIN_CREDENTIALS = { user: 'admin', pass: 'admin123' };
+        let isAdminAuthenticated = false;
+
+        const DEFAULT_HELP_CONTACTS = {
+            phone: '023 888 999 / 012 345 678',
+            telegram: 'https://t.me/sme_fsas_support',
+            facebook: 'https://facebook.com/smefsas.phnompenh',
+            social: 'TikTok: @sme.fsas.pp | Line: @smefsas'
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            buildFlatVillageList();
+            bindVillageTypeaheadEvents();
+            setDefaultDates();
+            initWeeklyRows();
+            loadSavedStaffList();
+            loadTelegramConfigToInputs();
+            ensureDefaultHelpContacts();
+            updateRoleBadgeUI();
+            bindDrawerMenuEvents();
+        });
+
+        function bindDrawerMenuEvents() {
+            const btn = document.getElementById('hamburger-btn');
+            const backdrop = document.getElementById('nav-drawer-backdrop');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleNavDrawer(e);
+                });
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', () => closeNavDrawer());
+            }
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeNavDrawer();
+            });
+        }
+
+        // Render suggestions below the input only when typing text
+        function renderVillageSuggestionsForInput(inputEl) {
+            const wrap = inputEl.closest('.village-picker-wrap');
+            if (!wrap) return;
+            const box = wrap.querySelector('.village-suggestion-box');
+            if (!box) return;
+
+            const query = inputEl.value.trim().toLowerCase();
+            if (!query) {
+                box.innerHTML = '';
+                box.classList.add('hidden');
+                return;
+            }
+
+            // Show villages starting with the typed characters first, then fallback to contains if needed
+            const startsWithMatches = flatPhnomPenhVillages.filter(item => {
+                const vLower = item.village.toLowerCase();
+                const noPrefixLower = item.withoutPrefix.toLowerCase();
+                return vLower.startsWith(query) || noPrefixLower.startsWith(query);
+            });
+
+            const matches = startsWithMatches.length > 0
+                ? startsWithMatches
+                : flatPhnomPenhVillages.filter(item => item.searchText.includes(query));
+
+            if (matches.length === 0) {
+                box.innerHTML = `<div class="px-3 py-2 text-xs text-slate-400">គ្មានក្នុងបញ្ជីភូមិ — អ្នកអាចវាយបន្តដោយសេរី</div>`;
+                box.classList.remove('hidden');
+                return;
+            }
+
+            // Show all matching villages so any village in Phnom Penh starting with typed letters can be picked or typed further
+            box.innerHTML = matches.map(m => `
+                <div class="village-suggestion-item" data-village="${escapeText(m.village)}" data-value="${escapeText(m.fullLabel)}">
+                    <div class="text-xs sm:text-sm font-semibold text-slate-800">${escapeText(m.village)}</div>
+                    <div class="text-[11px] text-slate-500">${escapeText(m.sangkat)} • ${escapeText(m.khan)}</div>
+                </div>
+            `).join('');
+
+            box.classList.remove('hidden');
+
+            box.querySelectorAll('.village-suggestion-item').forEach(item => {
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const chosen = item.getAttribute('data-value') || item.getAttribute('data-village') || '';
+                    inputEl.value = chosen;
+                    box.classList.add('hidden');
+                    saveCurrentStaffSnapshot();
+                });
+            });
+        }
+
+        function bindVillageTypeaheadEvents() {
+            document.addEventListener('input', (e) => {
+                if (e.target && e.target.classList && e.target.classList.contains('village-input')) {
+                    renderVillageSuggestionsForInput(e.target);
+                }
+            });
+
+            document.addEventListener('focusin', (e) => {
+                if (e.target && e.target.classList && e.target.classList.contains('village-input')) {
+                    if (e.target.value.trim()) {
+                        renderVillageSuggestionsForInput(e.target);
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.village-picker-wrap')) {
+                    document.querySelectorAll('.village-suggestion-box').forEach(b => b.classList.add('hidden'));
+                }
+            });
+
+            const staffInput = document.getElementById('staff-name');
+            if (staffInput) {
+                staffInput.addEventListener('input', () => {
+                    recallStaffData(false);
+                });
+                staffInput.addEventListener('change', () => {
+                    recallStaffData(true);
+                });
+            }
+
+            document.addEventListener('change', (e) => {
+                if (e.target && e.target.closest('main')) {
+                    saveCurrentStaffSnapshot();
+                }
+            });
+        }
+
+        function setDefaultDates() {
+            const todayIso = new Date().toISOString().slice(0, 10);
+            ['dr-disb-date', 'dr-plan-date', 'dr-late-date', 'dr-coll-date', 'dp-date'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.value) el.value = todayIso;
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-slate-600', 'hover:text-slate-900', 'hover:bg-white/60');
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            if (activeBtn) {
+                activeBtn.classList.add('tab-active');
+                activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900', 'hover:bg-white/60');
+            }
+
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+
+            const activePanel = document.getElementById(`panel-${tabName}`);
+            if (activePanel) {
+                activePanel.classList.remove('hidden');
+            }
+
+            const indicator = document.getElementById('active-report-indicator');
+            if (indicator) {
+                const labelMap = {
+                    'daily-report': '១. របាយការណ៍ប្រចាំថ្ងៃ',
+                    'daily-plan': '២. ផែនការប្រចាំថ្ងៃ',
+                    'weekly-plan': '៣. ផែនការប្រចាំសប្តាហ៍'
+                };
+                indicator.textContent = labelMap[tabName] || '១. របាយការណ៍ប្រចាំថ្ងៃ';
+            }
+        }
+        window.switchTab = switchTab;
+
+        function getCurrentActiveTabKey() {
+            if (!document.getElementById('panel-daily-plan')?.classList.contains('hidden')) return 'daily-plan';
+            if (!document.getElementById('panel-weekly-plan')?.classList.contains('hidden')) return 'weekly-plan';
+            return 'daily-report';
+        }
+        window.getCurrentActiveTabKey = getCurrentActiveTabKey;
+
+        function openActiveReportPreview() {
+            const key = getCurrentActiveTabKey();
+            if (key === 'daily-plan') return generateDailyPlan();
+            if (key === 'weekly-plan') return generateWeeklyPlan();
+            return generateDailyReport();
+        }
+        window.openActiveReportPreview = openActiveReportPreview;
+
+        function formatDateDDMMYYYY(isoStr) {
+            if (!isoStr) return 'DD/MM/YYYY';
+            const parts = String(isoStr).split('-');
+            if (parts.length !== 3) return isoStr;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function formatInt(val) {
+            const num = parseInt(val, 10);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function formatMoney(val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return '0';
+            return Number.isInteger(num) ? num.toLocaleString('en-US') : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function extractVillageOnly(rawValue, fallbackText = 'មិនបានបញ្ជាក់') {
+            const trimmed = String(rawValue || '').trim();
+            if (!trimmed) return fallbackText;
+            const parenIdx = trimmed.indexOf('(');
+            const villageOnly = (parenIdx > -1 ? trimmed.slice(0, parenIdx) : trimmed).trim();
+            return villageOnly || fallbackText;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const styles = {
+                success: 'bg-emerald-600 text-white border-emerald-700',
+                error: 'bg-rose-600 text-white border-rose-700',
+                info: 'bg-slate-800 text-white border-slate-900'
+            };
+            const icons = {
+                success: 'fa-circle-check',
+                error: 'fa-circle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto px-4 py-3 rounded-2xl shadow-lg border text-xs sm:text-sm font-semibold flex items-center gap-2.5 transition-all ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info}"></i><span>${escapeText(message)}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-6px)';
+                setTimeout(() => toast.remove(), 220);
+            }, 2800);
+        }
+
+        // =========================================================================
+        // 4. STAFF MEMORY RECALL (LOCALSTORAGE BY STAFF NAME)
+        // =========================================================================
+        function getAllStaffProfiles() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY_STAFF)) || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveAllStaffProfiles(profiles) {
+            try {
+                localStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(profiles));
+            } catch (e) {
+                console.error('Failed to save staff profiles:', e);
+            }
+        }
+
+        function loadSavedStaffList() {
+            const profiles = getAllStaffProfiles();
+            const names = Object.keys(profiles).filter(n => n && n.trim().length > 0);
+
+            const datalist = document.getElementById('staff-list');
+            if (datalist) {
+                datalist.innerHTML = names.map(name => `<option value="${escapeText(name)}"></option>`).join('');
+            }
+
+            const pillsWrap = document.getElementById('saved-staff-pills');
+            if (pillsWrap) {
+                if (names.length === 0) {
+                    pillsWrap.innerHTML = '';
+                    return;
+                }
+                pillsWrap.innerHTML = names.slice(0, 6).map(name => `
+                    <button type="button" onclick="selectSavedStaff('${escapeText(name)}')"
+                        class="px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 transition flex items-center gap-1 cursor-pointer">
+                        <i class="fa-solid fa-user text-[10px]"></i>
+                        <span>${escapeText(name)}</span>
+                    </button>
+                `).join('');
+            }
+        }
+
+        function selectSavedStaff(name) {
+            const input = document.getElementById('staff-name');
+            if (!input) return;
+            input.value = name;
+            recallStaffData(true);
+        }
+        window.selectSavedStaff = selectSavedStaff;
+
+        function saveCurrentStaffSnapshot() {
+            const staffNameInput = document.getElementById('staff-name');
+            if (!staffNameInput) return;
+            const staffName = staffNameInput.value.trim();
+            if (!staffName) return;
+
+            const profiles = getAllStaffProfiles();
+            profiles[staffName] = {
+                updatedAt: Date.now(),
+                dailyReport: {
+                    disbDate: document.getElementById('dr-disb-date').value,
+                    disbAcc: document.getElementById('dr-disb-acc').value,
+                    disbAmt: document.getElementById('dr-disb-amt').value,
+                    planDate: document.getElementById('dr-plan-date').value,
+                    planAcc: document.getElementById('dr-plan-acc').value,
+                    planAmt: document.getElementById('dr-plan-amt').value,
+                    lateDate: document.getElementById('dr-late-date').value,
+                    lp1Acc: document.getElementById('dr-late-p1-acc').value,
+                    lp1Amt: document.getElementById('dr-late-p1-amt').value,
+                    lp30Acc: document.getElementById('dr-late-p30-acc').value,
+                    lp30Amt: document.getElementById('dr-late-p30-amt').value,
+                    lp90Acc: document.getElementById('dr-late-p90-acc').value,
+                    lp90Amt: document.getElementById('dr-late-p90-amt').value,
+                    collDate: document.getElementById('dr-coll-date').value,
+                    cp1Acc: document.getElementById('dr-coll-p1-acc').value,
+                    cp1Amt: document.getElementById('dr-coll-p1-amt').value,
+                    cp30Acc: document.getElementById('dr-coll-p30-acc').value,
+                    cp30Amt: document.getElementById('dr-coll-p30-amt').value,
+                    cp90Acc: document.getElementById('dr-coll-p90-acc').value,
+                    cp90Amt: document.getElementById('dr-coll-p90-amt').value
+                },
+                dailyPlan: {
+                    lang: dailyPlanLang,
+                    date: document.getElementById('dp-date').value,
+                    lcHas: dailyPlanState.lcHas,
+                    lcAcc: document.getElementById('lc-acc').value,
+                    lcTotalAmt: document.getElementById('lc-total-amt').value,
+                    lcTypeIl: document.getElementById('lc-type-il').checked,
+                    lcAmtIl: document.getElementById('lc-amt-il').value,
+                    lcTypeIlu: document.getElementById('lc-type-ilu').checked,
+                    lcAmtIlu: document.getElementById('lc-amt-ilu').value,
+                    lcTypeAtl: document.getElementById('lc-type-atl').checked,
+                    lcAmtAtl: document.getElementById('lc-amt-atl').value,
+                    lcVillage: document.getElementById('lc-village').value,
+                    slHas: dailyPlanState.slHas,
+                    slAcc: document.getElementById('sl-acc').value,
+                    slTotalAmt: document.getElementById('sl-total-amt').value,
+                    slTypeIl: document.getElementById('sl-type-il').checked,
+                    slAmtIl: document.getElementById('sl-amt-il').value,
+                    slTypeIlu: document.getElementById('sl-type-ilu').checked,
+                    slAmtIlu: document.getElementById('sl-amt-ilu').value,
+                    slTypeAtl: document.getElementById('sl-type-atl').checked,
+                    slAmtAtl: document.getElementById('sl-amt-atl').value,
+                    slVillage: document.getElementById('sl-village').value
+                },
+                weeklyPlan: {
+                    lang: weeklyPlanLang,
+                    rows: getWeeklyRowsData()
+                }
+            };
+
+            saveAllStaffProfiles(profiles);
+            loadSavedStaffList();
+        }
+
+        function recallStaffData(showNotification = false) {
+            const staffNameInput = document.getElementById('staff-name');
+            const badge = document.getElementById('memory-badge');
+            if (!staffNameInput) return;
+
+            const staffName = staffNameInput.value.trim();
+            const profiles = getAllStaffProfiles();
+            const data = profiles[staffName];
+
+            if (!data) {
+                if (badge) badge.classList.add('hidden');
+                if (showNotification && staffName) {
+                    showToast(`មិនទាន់មានទិន្នន័យចាស់សម្រាប់ «${staffName}» ទេ`, 'info');
+                }
+                return;
+            }
+
+            if (badge) badge.classList.remove('hidden');
+
+            // Restore Daily Report
+            if (data.dailyReport) {
+                const dr = data.dailyReport;
+                if (dr.disbDate) document.getElementById('dr-disb-date').value = dr.disbDate;
+                document.getElementById('dr-disb-acc').value = dr.disbAcc ?? '';
+                document.getElementById('dr-disb-amt').value = dr.disbAmt ?? '';
+                if (dr.planDate) document.getElementById('dr-plan-date').value = dr.planDate;
+                document.getElementById('dr-plan-acc').value = dr.planAcc ?? '';
+                document.getElementById('dr-plan-amt').value = dr.planAmt ?? '';
+                if (dr.lateDate) document.getElementById('dr-late-date').value = dr.lateDate;
+                document.getElementById('dr-late-p1-acc').value = dr.lp1Acc ?? '';
+                document.getElementById('dr-late-p1-amt').value = dr.lp1Amt ?? '';
+                document.getElementById('dr-late-p30-acc').value = dr.lp30Acc ?? '';
+                document.getElementById('dr-late-p30-amt').value = dr.lp30Amt ?? '';
+                document.getElementById('dr-late-p90-acc').value = dr.lp90Acc ?? '';
+                document.getElementById('dr-late-p90-amt').value = dr.lp90Amt ?? '';
+                if (dr.collDate) document.getElementById('dr-coll-date').value = dr.collDate;
+                document.getElementById('dr-coll-p1-acc').value = dr.cp1Acc ?? '';
+                document.getElementById('dr-coll-p1-amt').value = dr.cp1Amt ?? '';
+                document.getElementById('dr-coll-p30-acc').value = dr.cp30Acc ?? '';
+                document.getElementById('dr-coll-p30-amt').value = dr.cp30Amt ?? '';
+                document.getElementById('dr-coll-p90-acc').value = dr.cp90Acc ?? '';
+                document.getElementById('dr-coll-p90-amt').value = dr.cp90Amt ?? '';
+            }
+
+            // Restore Daily Plan
+            if (data.dailyPlan) {
+                const dp = data.dailyPlan;
+                if (dp.lang) setDailyPlanLang(dp.lang);
+                if (dp.date) document.getElementById('dp-date').value = dp.date;
+
+                toggleDailyPlanSection('lc', dp.lcHas !== false);
+                document.getElementById('lc-acc').value = dp.lcAcc ?? '';
+                document.getElementById('lc-total-amt').value = dp.lcTotalAmt ?? '';
+                document.getElementById('lc-type-il').checked = Boolean(dp.lcTypeIl);
+                document.getElementById('lc-amt-il').disabled = !dp.lcTypeIl;
+                document.getElementById('lc-amt-il').value = dp.lcAmtIl ?? '';
+                document.getElementById('lc-type-ilu').checked = Boolean(dp.lcTypeIlu);
+                document.getElementById('lc-amt-ilu').disabled = !dp.lcTypeIlu;
+                document.getElementById('lc-amt-ilu').value = dp.lcAmtIlu ?? '';
+                document.getElementById('lc-type-atl').checked = Boolean(dp.lcTypeAtl);
+                document.getElementById('lc-amt-atl').disabled = !dp.lcTypeAtl;
+                document.getElementById('lc-amt-atl').value = dp.lcAmtAtl ?? '';
+                document.getElementById('lc-village').value = dp.lcVillage ?? '';
+
+                toggleDailyPlanSection('sl', dp.slHas !== false);
+                document.getElementById('sl-acc').value = dp.slAcc ?? '';
+                document.getElementById('sl-total-amt').value = dp.slTotalAmt ?? '';
+                document.getElementById('sl-type-il').checked = Boolean(dp.slTypeIl);
+                document.getElementById('sl-amt-il').disabled = !dp.slTypeIl;
+                document.getElementById('sl-amt-il').value = dp.slAmtIl ?? '';
+                document.getElementById('sl-type-ilu').checked = Boolean(dp.slTypeIlu);
+                document.getElementById('sl-amt-ilu').disabled = !dp.slTypeIlu;
+                document.getElementById('sl-amt-ilu').value = dp.slAmtIlu ?? '';
+                document.getElementById('sl-type-atl').checked = Boolean(dp.slTypeAtl);
+                document.getElementById('sl-amt-atl').disabled = !dp.slTypeAtl;
+                document.getElementById('sl-amt-atl').value = dp.slAmtAtl ?? '';
+                document.getElementById('sl-village').value = dp.slVillage ?? '';
+            }
+
+            // Restore Weekly Plan
+            if (data.weeklyPlan) {
+                const wp = data.weeklyPlan;
+                if (wp.lang) setWeeklyPlanLang(wp.lang);
+                const container = document.getElementById('weekly-rows-container');
+                if (container && Array.isArray(wp.rows) && wp.rows.length > 0) {
+                    container.innerHTML = '';
+                    wp.rows.forEach(r => addWeeklyRow(r));
+                    updateWeeklyTotals();
+                }
+            }
+
+            if (showNotification) {
+                showToast(`បានទាញទិន្នន័យចុងក្រោយរបស់ «${staffName}» រួចរាល់!`, 'success');
+            }
+        }
+        window.recallStaffData = recallStaffData;
+
+        // =========================================================================
+        // 5. MODULE 1: DAILY REPORT LOGIC
+        // =========================================================================
+        function copyLateToCollection() {
+            document.getElementById('dr-coll-p1-acc').value = document.getElementById('dr-late-p1-acc').value;
+            document.getElementById('dr-coll-p1-amt').value = document.getElementById('dr-late-p1-amt').value;
+            document.getElementById('dr-coll-p30-acc').value = document.getElementById('dr-late-p30-acc').value;
+            document.getElementById('dr-coll-p30-amt').value = document.getElementById('dr-late-p30-amt').value;
+            document.getElementById('dr-coll-p90-acc').value = document.getElementById('dr-late-p90-acc').value;
+            document.getElementById('dr-coll-p90-amt').value = document.getElementById('dr-late-p90-amt').value;
+            showToast('បានចម្លងទិន្នន័យអតិថិជនយឺតយ៉ាវ មកផែនការប្រមូល!', 'info');
+        }
+
+        function resetDailyReport() {
+            const fields = [
+                'dr-disb-acc', 'dr-disb-amt', 'dr-plan-acc', 'dr-plan-amt',
+                'dr-late-p1-acc', 'dr-late-p1-amt', 'dr-late-p30-acc', 'dr-late-p30-amt', 'dr-late-p90-acc', 'dr-late-p90-amt',
+                'dr-coll-p1-acc', 'dr-coll-p1-amt', 'dr-coll-p30-acc', 'dr-coll-p30-amt', 'dr-coll-p90-acc', 'dr-coll-p90-amt'
+            ];
+            fields.forEach(id => document.getElementById(id).value = '');
+            setDefaultDates();
+            showToast('បានសម្អាតទិន្នន័យរបាយការណ៍ប្រចាំថ្ងៃ', 'info');
+        }
+
+        function generateDailyReport() {
+            saveCurrentStaffSnapshot();
+
+            const disbDate = formatDateDDMMYYYY(document.getElementById('dr-disb-date').value);
+            const disbAcc = formatInt(document.getElementById('dr-disb-acc').value);
+            const disbAmt = formatMoney(document.getElementById('dr-disb-amt').value);
+
+            const planDate = formatDateDDMMYYYY(document.getElementById('dr-plan-date').value);
+            const planAcc = formatInt(document.getElementById('dr-plan-acc').value);
+            const planAmt = formatMoney(document.getElementById('dr-plan-amt').value);
+
+            const lateDate = formatDateDDMMYYYY(document.getElementById('dr-late-date').value);
+            const lp1Acc = formatInt(document.getElementById('dr-late-p1-acc').value);
+            const lp1Amt = formatMoney(document.getElementById('dr-late-p1-amt').value);
+            const lp30Acc = formatInt(document.getElementById('dr-late-p30-acc').value);
+            const lp30Amt = formatMoney(document.getElementById('dr-late-p30-amt').value);
+            const lp90Acc = formatInt(document.getElementById('dr-late-p90-acc').value);
+            const lp90Amt = formatMoney(document.getElementById('dr-late-p90-amt').value);
+
+            const collDate = formatDateDDMMYYYY(document.getElementById('dr-coll-date').value);
+            const cp1Acc = formatInt(document.getElementById('dr-coll-p1-acc').value);
+            const cp1Amt = formatMoney(document.getElementById('dr-coll-p1-amt').value);
+            const cp30Acc = formatInt(document.getElementById('dr-coll-p30-acc').value);
+            const cp30Amt = formatMoney(document.getElementById('dr-coll-p30-amt').value);
+            const cp90Acc = formatInt(document.getElementById('dr-coll-p90-acc').value);
+            const cp90Amt = formatMoney(document.getElementById('dr-coll-p90-amt').value);
+
+            const staffName = document.getElementById('staff-name').value.trim();
+            const staffHeader = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+
+            const message = `📋 របាយការណ៍ប្រចាំថ្ងៃ
+ជម្រាបជូនបង 🙏${staffHeader}
+
+📅 គិតត្រឹមថ្ងៃទី ${disbDate}
+💰 ខ្ញុំបាទបានទម្លាក់ទុន 
+👥 ចំនួនអតិថិជន៖ ${disbAcc} acc = ${disbAmt}$
+
+🗓 ផែនការទម្លាក់ថ្ងៃទី ${planDate}
+👥 អតិថិជន ${planAcc}acc = ${planAmt}$
+
+⚠️ អតិថិជនយឺតយ៉ាវថ្ងៃទី ${lateDate}
+🔸 Par1day ${lp1Acc}acc = ${lp1Amt}$
+🔸 Par30day ${lp30Acc}acc = ${lp30Amt}$
+🔸 Par90day ${lp90Acc}acc = ${lp90Amt}$
+
+📌 ផែនការប្រមូលថ្ងៃទី ${collDate}
+🔹 Par1day ${cp1Acc}acc = ${cp1Amt}$
+🔹 Par30day ${cp30Acc}acc = ${cp30Amt}$
+🔹 Par90day ${cp90Acc}acc = ${cp90Amt}$
+
+🙏 សូមអរគុណបង។ 🙏`;
+
+            openPreviewModal('របាយការណ៍ប្រចាំថ្ងៃ (Daily Report)', message);
+        }
+
+        // =========================================================================
+        // 6. MODULE 2: DAILY PLAN LOGIC (KM & EN)
+        // =========================================================================
+        function setDailyPlanLang(lang) {
+            dailyPlanLang = lang;
+            const btnKm = document.getElementById('dp-lang-km');
+            const btnEn = document.getElementById('dp-lang-en');
+            if (lang === 'km') {
+                btnKm.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition';
+                btnEn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+            } else {
+                btnEn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition';
+                btnKm.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+            }
+        }
+
+        function toggleDailyPlanSection(prefix, hasItem) {
+            if (prefix === 'lc') dailyPlanState.lcHas = hasItem;
+            if (prefix === 'sl') dailyPlanState.slHas = hasItem;
+
+            const details = document.getElementById(`${prefix}-details`);
+            const noneBox = document.getElementById(`${prefix}-none-box`);
+            const btnYes = document.getElementById(`${prefix}-status-yes`);
+            const btnNo = document.getElementById(`${prefix}-status-no`);
+            const activeColor = prefix === 'lc' ? 'bg-sky-600' : 'bg-purple-600';
+
+            if (hasItem) {
+                details.classList.remove('hidden');
+                noneBox.classList.add('hidden');
+                btnYes.className = `px-3 py-1 rounded-lg text-xs font-bold ${activeColor} text-white transition`;
+                btnNo.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 transition';
+            } else {
+                details.classList.add('hidden');
+                noneBox.classList.remove('hidden');
+                btnNo.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white transition';
+                btnYes.className = 'px-3 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-slate-800 transition';
+            }
+        }
+
+        function toggleTypeInput(prefix, typeKey) {
+            const cb = document.getElementById(`${prefix}-type-${typeKey}`);
+            const input = document.getElementById(`${prefix}-amt-${typeKey}`);
+            input.disabled = !cb.checked;
+            if (cb.checked) {
+                input.focus();
+            } else {
+                input.value = '';
+                autoSumLoanTypes(prefix);
+            }
+        }
+
+        function autoSumLoanTypes(prefix) {
+            let sum = 0;
+            ['il', 'ilu', 'atl'].forEach(k => {
+                const cb = document.getElementById(`${prefix}-type-${k}`);
+                const val = parseFloat(document.getElementById(`${prefix}-amt-${k}`).value);
+                if (cb.checked && !isNaN(val)) sum += val;
+            });
+            if (sum > 0) {
+                document.getElementById(`${prefix}-total-amt`).value = sum;
+            }
+        }
+
+        function buildDailyPlanSectionText(prefix, title, hasItem, lang) {
+            if (!hasItem) {
+                return lang === 'km'
+                    ? `🔹 ${title}៖ មិនមាន`
+                    : `🔹 ${title}: None`;
+            }
+
+            const acc = formatInt(document.getElementById(`${prefix}-acc`).value);
+            const totalAmt = formatMoney(document.getElementById(`${prefix}-total-amt`).value);
+            const rawVillage = document.getElementById(`${prefix}-village`).value;
+            const village = extractVillageOnly(rawVillage, lang === 'km' ? 'មិនបានបញ្ជាក់' : 'Not specified');
+
+            const selectedTypes = [];
+            const typeMap = [
+                { key: 'il', label: 'IL' },
+                { key: 'ilu', label: 'IL-Unsecured' },
+                { key: 'atl', label: 'ATL' }
+            ];
+
+            typeMap.forEach(t => {
+                if (document.getElementById(`${prefix}-type-${t.key}`).checked) {
+                    const amt = formatMoney(document.getElementById(`${prefix}-amt-${t.key}`).value);
+                    selectedTypes.push(`${t.label} (${amt}$)`);
+                }
+            });
+
+            const typesDisplay = selectedTypes.length > 0
+                ? selectedTypes.join(', ')
+                : (lang === 'km' ? 'មិនបានជ្រើសរើស' : 'N/A');
+
+            if (lang === 'km') {
+                return `🔹 ${title}៖
+   • ចំនួនអតិថិជន៖ ${acc} acc
+   • ទំហំកម្ចី៖ ${totalAmt}$
+   • ប្រភេទកម្ចី៖ ${typesDisplay}
+   • ភូមិ៖ ${village}`;
+            } else {
+                return `🔹 ${title}:
+   • Clients: ${acc} acc
+   • Loan Amount: ${totalAmt}$
+   • Loan Type: ${typesDisplay}
+   • Village: ${village}`;
+            }
+        }
+
+        function generateDailyPlan() {
+            saveCurrentStaffSnapshot();
+
+            const dateStr = formatDateDDMMYYYY(document.getElementById('dp-date').value);
+            const staffName = document.getElementById('staff-name').value.trim();
+            const lcText = buildDailyPlanSectionText('lc', 'Loan Check', dailyPlanState.lcHas, dailyPlanLang);
+            const slText = buildDailyPlanSectionText('sl', 'Survey Loan', dailyPlanState.slHas, dailyPlanLang);
+
+            let message = '';
+            if (dailyPlanLang === 'km') {
+                const staffLine = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+                message = `🗓 ផែនការប្រចាំថ្ងៃ (Daily Plan)
+ជម្រាបជូនបង 🙏${staffLine}
+📅 ថ្ងៃទី ${dateStr}
+
+សម្រាប់ខ្ញុំថ្ងៃនេះ៖
+
+${lcText}
+
+${slText}
+
+🙏 សូមអរគុណបង។ 🙏`;
+            } else {
+                const staffLine = staffName ? `\n👤 Staff: ${staffName}` : '';
+                message = `🗓 Daily Plan
+Dear Bong 🙏${staffLine}
+📅 Date: ${dateStr}
+
+For my plan today:
+
+${lcText}
+
+${slText}
+
+🙏 Thank you Bong. 🙏`;
+            }
+
+            openPreviewModal('ផែនការប្រចាំថ្ងៃ (Daily Plan)', message);
+        }
+
+        // =========================================================================
+        // 7. MODULE 3: WEEKLY DISBURSEMENT PLAN LOGIC (KM & EN)
+        // =========================================================================
+        function setWeeklyPlanLang(lang) {
+            weeklyPlanLang = lang;
+            const btnKm = document.getElementById('wp-lang-km');
+            const btnEn = document.getElementById('wp-lang-en');
+            if (lang === 'km') {
+                btnKm.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition';
+                btnEn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+            } else {
+                btnEn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white shadow-sm transition';
+                btnKm.className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+            }
+        }
+
+        function initWeeklyRows() {
+            const container = document.getElementById('weekly-rows-container');
+            container.innerHTML = '';
+            addWeeklyRow();
+            addWeeklyRow();
+        }
+
+        function addWeeklyRow(prefill = {}) {
+            const container = document.getElementById('weekly-rows-container');
+            const rowIndex = container.children.length + 1;
+
+            const row = document.createElement('div');
+            row.className = 'weekly-row p-3.5 sm:p-4 rounded-2xl bg-amber-50/50 border border-amber-200/90 space-y-3 relative transition';
+            row.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="row-badge inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-200/70 px-2.5 py-1 rounded-lg">
+                        <i class="fa-solid fa-location-dot text-amber-700"></i> ជួរទី ${rowIndex}
+                    </span>
+                    <button type="button" onclick="removeWeeklyRow(this)" title="លុបជួរនេះ"
+                        class="text-xs text-slate-400 hover:text-rose-600 px-2 py-1 rounded-lg hover:bg-rose-50 transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> <span>លុប</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <!-- Village (Phnom Penh) -->
+                    <div class="md:col-span-5">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ភូមិ (រាជធានីភ្នំពេញ)</label>
+                        <div class="relative village-picker-wrap">
+                            <input type="text" autocomplete="off" value="${prefill.village || ''}" placeholder="វាយអក្សរដើម្បីបង្ហាញភូមិ ឬវាយបន្ត..."
+                                class="village-input wp-village w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-xs sm:text-sm outline-none focus:border-amber-500">
+                            <div class="village-suggestion-box hidden"></div>
+                        </div>
+                    </div>
+
+                    <!-- Clients (acc) -->
+                    <div class="grid grid-cols-2 md:col-span-4 gap-2.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">អតិថិជន (acc)</label>
+                            <input type="number" min="0" value="${prefill.acc || ''}" oninput="updateWeeklyTotals()" placeholder="0"
+                                class="wp-acc w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-sm font-semibold outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ទំហំកម្ចី ($)</label>
+                            <input type="number" min="0" step="any" value="${prefill.amt || ''}" oninput="updateWeeklyTotals()" placeholder="0"
+                                class="wp-amt w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-sm font-semibold outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <!-- Disbursement Day (Monday - Friday) -->
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ថ្ងៃអាចទម្លាក់ទុន (ចន្ទ-សុក្រ)</label>
+                        <select class="wp-day w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-xs sm:text-sm font-medium outline-none focus:border-amber-500">
+                            <option value="Monday" ${prefill.day === 'Monday' ? 'selected' : ''}>ថ្ងៃចន្ទ (Monday)</option>
+                            <option value="Tuesday" ${prefill.day === 'Tuesday' ? 'selected' : ''}>ថ្ងៃអង្គារ (Tuesday)</option>
+                            <option value="Wednesday" ${prefill.day === 'Wednesday' ? 'selected' : ''}>ថ្ងៃពុធ (Wednesday)</option>
+                            <option value="Thursday" ${prefill.day === 'Thursday' ? 'selected' : ''}>ថ្ងៃព្រហស្បតិ៍ (Thursday)</option>
+                            <option value="Friday" ${prefill.day === 'Friday' ? 'selected' : ''}>ថ្ងៃសុក្រ (Friday)</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            container.appendChild(row);
+            renumberWeeklyRows();
+        }
+
+        function removeWeeklyRow(btn) {
+            const container = document.getElementById('weekly-rows-container');
+            if (container.children.length <= 1) {
+                showToast('ត្រូវមានយ៉ាងហោចណាស់ ១ ជួរ!', 'error');
+                return;
+            }
+            btn.closest('.weekly-row').remove();
+            renumberWeeklyRows();
+            updateWeeklyTotals();
+        }
+
+        function renumberWeeklyRows() {
+            const rows = document.querySelectorAll('#weekly-rows-container .weekly-row');
+            rows.forEach((row, idx) => {
+                const badge = row.querySelector('.row-badge');
+                if (badge) {
+                    badge.innerHTML = `<i class="fa-solid fa-location-dot text-amber-700"></i> ជួរទី ${idx + 1}`;
+                }
+            });
+        }
+
+        function updateWeeklyTotals() {
+            let totalAcc = 0;
+            let totalAmt = 0;
+            document.querySelectorAll('#weekly-rows-container .weekly-row').forEach(row => {
+                const acc = parseInt(row.querySelector('.wp-acc').value, 10);
+                const amt = parseFloat(row.querySelector('.wp-amt').value);
+                if (!isNaN(acc)) totalAcc += acc;
+                if (!isNaN(amt)) totalAmt += amt;
+            });
+            document.getElementById('wp-sum-acc').textContent = totalAcc;
+            document.getElementById('wp-sum-amt').textContent = formatMoney(totalAmt);
+        }
+
+        function getWeeklyRowsData() {
+            const rows = [];
+            document.querySelectorAll('#weekly-rows-container .weekly-row').forEach(row => {
+                rows.push({
+                    village: row.querySelector('.wp-village').value.trim(),
+                    acc: row.querySelector('.wp-acc').value,
+                    amt: row.querySelector('.wp-amt').value,
+                    day: row.querySelector('.wp-day').value
+                });
+            });
+            return rows;
+        }
+
+        function generateWeeklyPlan() {
+            saveCurrentStaffSnapshot();
+
+            const dayNamesKm = {
+                Monday: 'ថ្ងៃចន្ទ',
+                Tuesday: 'ថ្ងៃអង្គារ',
+                Wednesday: 'ថ្ងៃពុធ',
+                Thursday: 'ថ្ងៃព្រហស្បតិ៍',
+                Friday: 'ថ្ងៃសុក្រ'
+            };
+
+            const rows = getWeeklyRowsData();
+            const staffName = document.getElementById('staff-name').value.trim();
+
+            let totalAcc = 0;
+            let totalAmt = 0;
+            const lines = [];
+
+            rows.forEach((r, idx) => {
+                const accNum = parseInt(r.acc, 10) || 0;
+                const amtNum = parseFloat(r.amt) || 0;
+                totalAcc += accNum;
+                totalAmt += amtNum;
+
+                const villageText = extractVillageOnly(
+                    r.village,
+                    weeklyPlanLang === 'km' ? 'មិនបានបញ្ជាក់ភូមិ' : 'Unspecified Village'
+                );
+
+                if (weeklyPlanLang === 'km') {
+                    const dayKh = dayNamesKm[r.day] || r.day;
+                    lines.push(`${idx + 1}. ភូមិ៖ ${villageText}\n   • ចំនួនអតិថិជន៖ ${accNum} acc = ${formatMoney(amtNum)}$\n   • ថ្ងៃទម្លាក់ទុន៖ ${dayKh}`);
+                } else {
+                    lines.push(`${idx + 1}. Village: ${villageText}\n   • Clients: ${accNum} acc = ${formatMoney(amtNum)}$\n   • Disbursement Day: ${r.day}`);
+                }
+            });
+
+            let message = '';
+            if (weeklyPlanLang === 'km') {
+                const staffLine = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+                message = `📆 ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (Weekly Disbursement Plan)
+ជម្រាបជូនបង 🙏${staffLine}
+
+សម្រាប់ខ្ញុំ៖
+${lines.join('\n\n')}
+
+📊 សរុបរួមប្រចាំសប្តាហ៍៖ ${totalAcc} acc = ${formatMoney(totalAmt)}$
+
+អរគុណបង 🙏`;
+            } else {
+                const staffLine = staffName ? `\n👤 Staff: ${staffName}` : '';
+                message = `📆 Weekly Disbursement Plan
+Dear Bong 🙏${staffLine}
+
+For my plan:
+${lines.join('\n\n')}
+
+📊 Weekly Total: ${totalAcc} acc = ${formatMoney(totalAmt)}$
+
+Thank you 🙏`;
+            }
+
+            openPreviewModal('ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (Weekly Plan)', message);
+        }
+
+        // =========================================================================
+        // 7B. DIRECT REPORT BUILDERS & QUICK ACTIONS (PREVIEW, COPY, PDF, TELEGRAM)
+        // =========================================================================
+        function buildDailyReportPayload() {
+            saveCurrentStaffSnapshot();
+
+            const disbDate = formatDateDDMMYYYY(document.getElementById('dr-disb-date').value);
+            const disbAcc = formatInt(document.getElementById('dr-disb-acc').value);
+            const disbAmt = formatMoney(document.getElementById('dr-disb-amt').value);
+
+            const planDate = formatDateDDMMYYYY(document.getElementById('dr-plan-date').value);
+            const planAcc = formatInt(document.getElementById('dr-plan-acc').value);
+            const planAmt = formatMoney(document.getElementById('dr-plan-amt').value);
+
+            const lateDate = formatDateDDMMYYYY(document.getElementById('dr-late-date').value);
+            const lp1Acc = formatInt(document.getElementById('dr-late-p1-acc').value);
+            const lp1Amt = formatMoney(document.getElementById('dr-late-p1-amt').value);
+            const lp30Acc = formatInt(document.getElementById('dr-late-p30-acc').value);
+            const lp30Amt = formatMoney(document.getElementById('dr-late-p30-amt').value);
+            const lp90Acc = formatInt(document.getElementById('dr-late-p90-acc').value);
+            const lp90Amt = formatMoney(document.getElementById('dr-late-p90-amt').value);
+
+            const collDate = formatDateDDMMYYYY(document.getElementById('dr-coll-date').value);
+            const cp1Acc = formatInt(document.getElementById('dr-coll-p1-acc').value);
+            const cp1Amt = formatMoney(document.getElementById('dr-coll-p1-amt').value);
+            const cp30Acc = formatInt(document.getElementById('dr-coll-p30-acc').value);
+            const cp30Amt = formatMoney(document.getElementById('dr-coll-p30-amt').value);
+            const cp90Acc = formatInt(document.getElementById('dr-coll-p90-acc').value);
+            const cp90Amt = formatMoney(document.getElementById('dr-coll-p90-amt').value);
+
+            const staffName = document.getElementById('staff-name').value.trim();
+            const staffHeader = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+
+            return {
+                title: 'របាយការណ៍ប្រចាំថ្ងៃ (Daily Report)',
+                message: `📋 របាយការណ៍ប្រចាំថ្ងៃ
+ជម្រាបជូនបង 🙏${staffHeader}
+
+📅 គិតត្រឹមថ្ងៃទី ${disbDate}
+💰 ខ្ញុំបាទបានទម្លាក់ទុន 
+👥 ចំនួនអតិថិជន៖ ${disbAcc} acc = ${disbAmt}$
+
+🗓 ផែនការទម្លាក់ថ្ងៃទី ${planDate}
+👥 អតិថិជន ${planAcc}acc = ${planAmt}$
+
+⚠️ អតិថិជនយឺតយ៉ាវថ្ងៃទី ${lateDate}
+🔸 Par1day ${lp1Acc}acc = ${lp1Amt}$
+🔸 Par30day ${lp30Acc}acc = ${lp30Amt}$
+🔸 Par90day ${lp90Acc}acc = ${lp90Amt}$
+
+📌 ផែនការប្រមូលថ្ងៃទី ${collDate}
+🔹 Par1day ${cp1Acc}acc = ${cp1Amt}$
+🔹 Par30day ${cp30Acc}acc = ${cp30Amt}$
+🔹 Par90day ${cp90Acc}acc = ${cp90Amt}$
+
+🙏 សូមអរគុណបង។ 🙏`
+            };
+        }
+
+        function buildDailyPlanPayload() {
+            saveCurrentStaffSnapshot();
+
+            const dateStr = formatDateDDMMYYYY(document.getElementById('dp-date').value);
+            const staffName = document.getElementById('staff-name').value.trim();
+            const lcText = buildDailyPlanSectionText('lc', 'Loan Check', dailyPlanState.lcHas, dailyPlanLang);
+            const slText = buildDailyPlanSectionText('sl', 'Survey Loan', dailyPlanState.slHas, dailyPlanLang);
+
+            let message = '';
+            if (dailyPlanLang === 'km') {
+                const staffLine = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+                message = `🗓 ផែនការប្រចាំថ្ងៃ (Daily Plan)
+ជម្រាបជូនបង 🙏${staffLine}
+📅 ថ្ងៃទី ${dateStr}
+
+សម្រាប់ខ្ញុំថ្ងៃនេះ៖
+
+${lcText}
+
+${slText}
+
+🙏 សូមអរគុណបង។ 🙏`;
+            } else {
+                const staffLine = staffName ? `\n👤 Staff: ${staffName}` : '';
+                message = `🗓 Daily Plan
+Dear Bong 🙏${staffLine}
+📅 Date: ${dateStr}
+
+For my plan today:
+
+${lcText}
+
+${slText}
+
+🙏 Thank you Bong. 🙏`;
+            }
+
+            return {
+                title: 'ផែនការប្រចាំថ្ងៃ (Daily Plan)',
+                message
+            };
+        }
+
+        function buildWeeklyPlanPayload() {
+            saveCurrentStaffSnapshot();
+
+            const dayNamesKm = {
+                Monday: 'ថ្ងៃចន្ទ',
+                Tuesday: 'ថ្ងៃអង្គារ',
+                Wednesday: 'ថ្ងៃពុធ',
+                Thursday: 'ថ្ងៃព្រហស្បតិ៍',
+                Friday: 'ថ្ងៃសុក្រ'
+            };
+
+            const rows = getWeeklyRowsData();
+            const staffName = document.getElementById('staff-name').value.trim();
+
+            let totalAcc = 0;
+            let totalAmt = 0;
+            const lines = [];
+
+            rows.forEach((r, idx) => {
+                const accNum = parseInt(r.acc, 10) || 0;
+                const amtNum = parseFloat(r.amt) || 0;
+                totalAcc += accNum;
+                totalAmt += amtNum;
+
+                const villageText = extractVillageOnly(
+                    r.village,
+                    weeklyPlanLang === 'km' ? 'មិនបានបញ្ជាក់ភូមិ' : 'Unspecified Village'
+                );
+
+                if (weeklyPlanLang === 'km') {
+                    const dayKh = dayNamesKm[r.day] || r.day;
+                    lines.push(`${idx + 1}. ភូមិ៖ ${villageText}\n   • ចំនួនអតិថិជន៖ ${accNum} acc = ${formatMoney(amtNum)}$\n   • ថ្ងៃទម្លាក់ទុន៖ ${dayKh}`);
+                } else {
+                    lines.push(`${idx + 1}. Village: ${villageText}\n   • Clients: ${accNum} acc = ${formatMoney(amtNum)}$\n   • Disbursement Day: ${r.day}`);
+                }
+            });
+
+            let message = '';
+            if (weeklyPlanLang === 'km') {
+                const staffLine = staffName ? `\n👤 បុគ្គលិក៖ ${staffName}` : '';
+                message = `📆 ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (Weekly Disbursement Plan)
+ជម្រាបជូនបង 🙏${staffLine}
+
+សម្រាប់ខ្ញុំ៖
+${lines.join('\n\n')}
+
+📊 សរុបរួមប្រចាំសប្តាហ៍៖ ${totalAcc} acc = ${formatMoney(totalAmt)}$
+
+អរគុណបង 🙏`;
+            } else {
+                const staffLine = staffName ? `\n👤 Staff: ${staffName}` : '';
+                message = `📆 Weekly Disbursement Plan
+Dear Bong 🙏${staffLine}
+
+For my plan:
+${lines.join('\n\n')}
+
+📊 Weekly Total: ${totalAcc} acc = ${formatMoney(totalAmt)}$
+
+Thank you 🙏`;
+            }
+
+            return {
+                title: 'ផែនការទម្លាក់ទុនប្រចាំសប្តាហ៍ (Weekly Plan)',
+                message
+            };
+        }
+
+        function getReportPayloadByKey(reportKey) {
+            if (reportKey === 'daily-plan') return buildDailyPlanPayload();
+            if (reportKey === 'weekly-plan') return buildWeeklyPlanPayload();
+            return buildDailyReportPayload();
+        }
+
+        function directCopyReport(reportKey) {
+            const payload = getReportPayloadByKey(reportKey);
+            currentReportTitle = payload.title;
+            document.getElementById('modal-title').textContent = payload.title;
+            document.getElementById('preview-message-box').value = payload.message;
+            copyPreviewText();
+        }
+        window.directCopyReport = directCopyReport;
+
+        function directDownloadPdfReport(reportKey) {
+            const payload = getReportPayloadByKey(reportKey);
+            currentReportTitle = payload.title;
+            document.getElementById('modal-title').textContent = payload.title;
+            document.getElementById('preview-message-box').value = payload.message;
+            downloadFormattedPDF();
+        }
+        window.directDownloadPdfReport = directDownloadPdfReport;
+
+        function directSendTelegramReport(reportKey) {
+            const payload = getReportPayloadByKey(reportKey);
+            currentReportTitle = payload.title;
+            document.getElementById('modal-title').textContent = payload.title;
+            document.getElementById('preview-message-box').value = payload.message;
+            sendToTelegram();
+        }
+        window.directSendTelegramReport = directSendTelegramReport;
+
+        // =========================================================================
+        // 8. PREVIEW MODAL, COPY TEXT, CLEAN PDF EXPORT & TELEGRAM SEND
+        // =========================================================================
+        function openPreviewModal(title, messageText) {
+            currentReportTitle = title;
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('preview-message-box').value = messageText;
+            const modal = document.getElementById('preview-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePreviewModal() {
+            const modal = document.getElementById('preview-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Action 1: Copy Text (Using document.execCommand('copy') for iframe reliability)
+        function copyPreviewText() {
+            const textarea = document.getElementById('preview-message-box');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999);
+            try {
+                const ok = document.execCommand('copy');
+                if (ok) {
+                    showToast('បានចម្លងអត្ថបទចូល Clipboard រួចរាល់!', 'success');
+                } else {
+                    showToast('មិនអាចចម្លងបានទេ សូមជ្រើសរើសអត្ថបទដោយដៃ', 'error');
+                }
+            } catch (err) {
+                showToast('មានបញ្ហាក្នុងការចម្លងអត្ថបទ', 'error');
+            }
+        }
+
+        // Action 2: Download Clean, Well-Formatted PDF
+        function downloadFormattedPDF() {
+            const textContent = document.getElementById('preview-message-box').value;
+            const staffName = document.getElementById('staff-name').value.trim() || 'SME / FSA-S Officer';
+            const nowStr = new Date().toLocaleString('en-GB', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            // Escape HTML safely and convert newlines
+            const safeHtmlBody = textContent
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+
+            const wrapper = document.getElementById('pdf-render-wrapper');
+            wrapper.innerHTML = `
+                <div style="font-family: 'Kantumruy Pro', 'Inter', sans-serif; padding: 36px 42px; color: #1e293b; background: #ffffff; line-height: 1.75;">
+                    <!-- Header Banner -->
+                    <div style="border-bottom: 3px solid #1d4ed8; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em;">
+                                SME / FSA-S LOAN DEPARTMENT • PHNOM PENH
+                            </div>
+                            <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 4px 0 0 0;">
+                                ${currentReportTitle}
+                            </h1>
+                        </div>
+                        <div style="text-align: right; font-size: 12px; color: #475569;">
+                            <div><strong>បុគ្គលិក៖</strong> ${staffName}</div>
+                            <div><strong>កាលបរិច្ឆេទបោះពុម្ព៖</strong> ${nowStr}</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Message Card -->
+                    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 14px; padding: 24px 28px; font-size: 14.5px; color: #0f172a;">
+                        ${safeHtmlBody}
+                    </div>
+
+                    <!-- Footer Signature Area -->
+                    <div style="margin-top: 32px; padding-top: 14px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: space-between; font-size: 11px; color: #64748b;">
+                        <span>ឯកសារបង្កើតដោយស្វ័យប្រវត្តិពីប្រព័ន្ធ SME / FSA-S Portal</span>
+                        <span>រាជធានីភ្នំពេញ</span>
+                    </div>
+                </div>
+            `;
+
+            showToast('កំពុងរៀបចំឯកសារ PDF សូមរង់ចាំបន្តិច...', 'info');
+
+            const cleanFileName = `${currentReportTitle.replace(/[^a-zA-Z0-9\u1780-\u17FF]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+            const opt = {
+                margin: [8, 8, 8, 8],
+                filename: cleanFileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(wrapper.firstElementChild).save().then(() => {
+                showToast('បានទាញយកឯកសារ PDF ដោយជោគជ័យ!', 'success');
+                wrapper.innerHTML = '';
+            }).catch(err => {
+                console.error(err);
+                showToast('មានបញ្ហាក្នុងការបង្កើត PDF', 'error');
+            });
+        }
+
+        // =========================================================================
+        // 9. TELEGRAM BOT INTEGRATION
+        // =========================================================================
+        function openTelegramSettings() {
+            loadTelegramConfigToInputs();
+            const modal = document.getElementById('telegram-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTelegramSettings() {
+            const modal = document.getElementById('telegram-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function loadTelegramConfigToInputs() {
+            try {
+                const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_TG)) || {};
+                const tgInput = document.getElementById('tg-bot-token');
+                const chatInput = document.getElementById('tg-chat-id');
+                if (tgInput) tgInput.value = cfg.token || '';
+                if (chatInput) chatInput.value = cfg.chatId || '';
+                const adminTgInput = document.getElementById('admin-tg-token');
+                const adminChatInput = document.getElementById('admin-tg-chat');
+                if (adminTgInput) adminTgInput.value = cfg.token || '';
+                if (adminChatInput) adminChatInput.value = cfg.chatId || '';
+            } catch (e) {}
+        }
+
+        async function sendToTelegram() {
+            const text = document.getElementById('preview-message-box').value.trim();
+            if (!text) {
+                showToast('មិនមានអត្ថបទសម្រាប់ផ្ញើទៅ Telegram ទេ', 'error');
+                return;
+            }
+
+            let cfg = {};
+            try {
+                cfg = JSON.parse(localStorage.getItem(STORAGE_KEY_TG)) || {};
+            } catch (e) {}
+
+            const token = (cfg.token || '').trim();
+            const chatId = (cfg.chatId || '').trim();
+
+            if (!token || !chatId) {
+                showToast('សូមឱ្យ Admin កំណត់ Telegram Bot Token និង Chat ID ក្នុងម៉ឺនុយការកំណត់ជាមុន', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-send-telegram');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>កំពុងផ្ញើ...</span>';
+            }
+
+            try {
+                const resp = await fetch(`https://api.telegram.org/bot${encodeURIComponent(token)}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: text
+                    })
+                });
+                const data = await resp.json();
+                if (resp.ok && data && data.ok) {
+                    showToast('បានផ្ញើសារចូល Telegram ដោយជោគជ័យ!', 'success');
+                } else {
+                    showToast(`ផ្ញើមិនបានសម្រេច៖ ${(data && data.description) || 'ពិនិត្យ Token/Chat ID'}`, 'error');
+                }
+            } catch (err) {
+                showToast('មានបញ្ហាបណ្តាញ (Network) ពេលផ្ញើទៅ Telegram', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            }
+        }
+
+        // =========================================================================
+        // 10. DRAWER, ADMIN AUTH, LOCKED HELP CONTACTS & DISBURSED RESULTS VIEW
+        // =========================================================================
+        function updateRoleBadgeUI() {
+            const lockBadge = document.getElementById('drawer-admin-lock');
+            const authStatus = document.getElementById('drawer-auth-status');
+            const logoutBtn = document.getElementById('drawer-logout-btn');
+
+            if (isAdminAuthenticated) {
+                if (lockBadge) {
+                    lockBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold';
+                    lockBadge.innerHTML = '<i class="fa-solid fa-unlock mr-0.5"></i> Unlocked';
+                }
+                if (authStatus) authStatus.textContent = 'ស្ថានភាព៖ បានចូល Admin';
+                if (logoutBtn) logoutBtn.classList.remove('hidden');
+            } else {
+                if (lockBadge) {
+                    lockBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold';
+                    lockBadge.innerHTML = '<i class="fa-solid fa-lock mr-0.5"></i> Admin';
+                }
+                if (authStatus) authStatus.textContent = 'ស្ថានភាព៖ User ធម្មតា';
+                if (logoutBtn) logoutBtn.classList.add('hidden');
+            }
+        }
+
+        function openNavDrawer() {
+            const backdrop = document.getElementById('nav-drawer-backdrop');
+            const drawer = document.getElementById('nav-drawer');
+            if (!backdrop || !drawer) return;
+            backdrop.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                drawer.classList.remove('-translate-x-full');
+                drawer.classList.add('translate-x-0');
+            });
+        }
+
+        function closeNavDrawer() {
+            const backdrop = document.getElementById('nav-drawer-backdrop');
+            const drawer = document.getElementById('nav-drawer');
+            if (!backdrop || !drawer) return;
+            drawer.classList.remove('translate-x-0');
+            drawer.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
+        }
+
+        function toggleNavDrawer(e) {
+            if (e) e.stopPropagation();
+            const drawer = document.getElementById('nav-drawer');
+            if (!drawer) return;
+            if (drawer.classList.contains('-translate-x-full')) {
+                openNavDrawer();
+            } else {
+                closeNavDrawer();
+            }
+        }
+
+        window.openNavDrawer = openNavDrawer;
+        window.closeNavDrawer = closeNavDrawer;
+        window.toggleNavDrawer = toggleNavDrawer;
+
+        function navigateFromDrawer(target) {
+            closeNavDrawer();
+            setTimeout(() => {
+                if (target === 'home') {
+                    switchTab('daily-report');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (target === 'daily-report' || target === 'daily-plan' || target === 'weekly-plan') {
+                    switchTab(target);
+                } else if (target === 'settings') {
+                    openSettingsGate();
+                } else if (target === 'help') {
+                    openHelpModal();
+                }
+            }, 60);
+        }
+        window.navigateFromDrawer = navigateFromDrawer;
+
+        function openSettingsGate() {
+            if (isAdminAuthenticated) {
+                openAdminSettingsModal();
+            } else {
+                document.getElementById('admin-login-user').value = '';
+                document.getElementById('admin-login-pass').value = '';
+                const modal = document.getElementById('admin-login-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeAdminLoginModal() {
+            const modal = document.getElementById('admin-login-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function verifyAdminLogin() {
+            const u = document.getElementById('admin-login-user').value.trim();
+            const p = document.getElementById('admin-login-pass').value;
+
+            if (u === ADMIN_CREDENTIALS.user && p === ADMIN_CREDENTIALS.pass) {
+                isAdminAuthenticated = true;
+                updateRoleBadgeUI();
+                closeAdminLoginModal();
+                showToast('បានចូលគណនី Admin ដោយជោគជ័យ!', 'success');
+                openAdminSettingsModal();
+            } else {
+                showToast('User Admin ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!', 'error');
+            }
+        }
+
+        function logoutAdminSession() {
+            isAdminAuthenticated = false;
+            updateRoleBadgeUI();
+            closeAdminSettingsModal();
+            showToast('បានចាកចេញពីគណនី Admin', 'info');
+        }
+        window.logoutAdminSession = logoutAdminSession;
+        function ensureDefaultHelpContacts() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY_HELP);
+                if (!raw) {
+                    localStorage.setItem(STORAGE_KEY_HELP, JSON.stringify(DEFAULT_HELP_CONTACTS));
+                }
+            } catch (e) {}
+        }
+
+        function getHelpContacts() {
+            ensureDefaultHelpContacts();
+            try {
+                return { ...DEFAULT_HELP_CONTACTS, ...(JSON.parse(localStorage.getItem(STORAGE_KEY_HELP)) || {}) };
+            } catch (e) {
+                return DEFAULT_HELP_CONTACTS;
+            }
+        }
+
+        function openAdminSettingsModal() {
+            if (!isAdminAuthenticated) {
+                openSettingsGate();
+                return;
+            }
+            loadTelegramConfigToInputs();
+            const help = getHelpContacts();
+            document.getElementById('admin-help-phone').value = help.phone || '';
+            document.getElementById('admin-help-telegram').value = help.telegram || '';
+            document.getElementById('admin-help-facebook').value = help.facebook || '';
+            document.getElementById('admin-help-social').value = help.social || '';
+
+            const modal = document.getElementById('admin-settings-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAdminSettingsModal() {
+            const modal = document.getElementById('admin-settings-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveAllAdminSettings() {
+            if (!isAdminAuthenticated) return;
+            const token = document.getElementById('admin-tg-token').value.trim();
+            const chatId = document.getElementById('admin-tg-chat').value.trim();
+            localStorage.setItem(STORAGE_KEY_TG, JSON.stringify({ token, chatId }));
+
+            const helpData = {
+                phone: document.getElementById('admin-help-phone').value.trim() || DEFAULT_HELP_CONTACTS.phone,
+                telegram: document.getElementById('admin-help-telegram').value.trim() || DEFAULT_HELP_CONTACTS.telegram,
+                facebook: document.getElementById('admin-help-facebook').value.trim() || DEFAULT_HELP_CONTACTS.facebook,
+                social: document.getElementById('admin-help-social').value.trim() || DEFAULT_HELP_CONTACTS.social
+            };
+            localStorage.setItem(STORAGE_KEY_HELP, JSON.stringify(helpData));
+
+            showToast('បានរក្សាទុកការកំណត់ Telegram និងព័ត៌មានជំនួយរួចរាល់!', 'success');
+            closeAdminSettingsModal();
+        }
+
+        function escapeText(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function openHelpModal() {
+            const help = getHelpContacts();
+            const contactsContainer = document.getElementById('help-contacts-display');
+            const modeBadge = document.getElementById('help-mode-badge');
+            const subtitle = document.getElementById('help-modal-subtitle');
+            const saveRow = document.getElementById('help-admin-save-row');
+
+            if (isAdminAuthenticated) {
+                if (subtitle) subtitle.textContent = 'Admin អាចកែប្រែព័ត៌មានក្នុងមុខងារជំនួយបានទាំងអស់';
+                if (modeBadge) {
+                    modeBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold';
+                    modeBadge.innerHTML = '<i class="fa-solid fa-pen-to-square mr-1"></i>Admin Edit Mode';
+                }
+                if (saveRow) saveRow.classList.remove('hidden');
+
+                contactsContainer.innerHTML = `
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-solid fa-phone text-emerald-600 mr-1"></i> លេខទូរសព្ទ
+                        </label>
+                        <input type="text" id="help-edit-phone" value="${escapeText(help.phone)}"
+                            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-brands fa-telegram text-sky-500 mr-1"></i> Telegram
+                        </label>
+                        <input type="text" id="help-edit-telegram" value="${escapeText(help.telegram)}"
+                            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-brands fa-facebook text-blue-600 mr-1"></i> Facebook
+                        </label>
+                        <input type="text" id="help-edit-facebook" value="${escapeText(help.facebook)}"
+                            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-solid fa-share-nodes text-purple-600 mr-1"></i> បណ្តាញសង្គមផ្សេងៗ
+                        </label>
+                        <input type="text" id="help-edit-social" value="${escapeText(help.social)}"
+                            class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-800 focus:border-emerald-500 outline-none">
+                    </div>
+                `;
+            } else {
+                if (subtitle) subtitle.textContent = 'ព័ត៌មានទំនាក់ទំនងត្រូវបានរក្សាទុកថេរ (User មិនអាចកែតម្រូវបាន)';
+                if (modeBadge) {
+                    modeBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-semibold';
+                    modeBadge.innerHTML = '<i class="fa-solid fa-lock mr-1"></i>រក្សាទុកថេរ (Read-only)';
+                }
+                if (saveRow) saveRow.classList.add('hidden');
+
+                contactsContainer.innerHTML = `
+                    <div class="p-3 rounded-xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mb-0.5">
+                            <i class="fa-solid fa-phone text-emerald-600"></i> លេខទូរសព្ទ
+                        </div>
+                        <div class="font-semibold text-slate-800 select-all">${escapeText(help.phone)}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mb-0.5">
+                            <i class="fa-brands fa-telegram text-sky-500"></i> Telegram
+                        </div>
+                        <div class="font-semibold text-slate-800 break-all select-all">${escapeText(help.telegram)}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mb-0.5">
+                            <i class="fa-brands fa-facebook text-blue-600"></i> Facebook
+                        </div>
+                        <div class="font-semibold text-slate-800 break-all select-all">${escapeText(help.facebook)}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-white border border-slate-200">
+                        <div class="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mb-0.5">
+                            <i class="fa-solid fa-share-nodes text-purple-600"></i> បណ្តាញសង្គមផ្សេងៗ
+                        </div>
+                        <div class="font-semibold text-slate-800 break-words select-all">${escapeText(help.social)}</div>
+                    </div>
+                `;
+            }
+
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function saveHelpFromModal() {
+            if (!isAdminAuthenticated) return;
+            const helpData = {
+                phone: document.getElementById('help-edit-phone')?.value.trim() || DEFAULT_HELP_CONTACTS.phone,
+                telegram: document.getElementById('help-edit-telegram')?.value.trim() || DEFAULT_HELP_CONTACTS.telegram,
+                facebook: document.getElementById('help-edit-facebook')?.value.trim() || DEFAULT_HELP_CONTACTS.facebook,
+                social: document.getElementById('help-edit-social')?.value.trim() || DEFAULT_HELP_CONTACTS.social
+            };
+            localStorage.setItem(STORAGE_KEY_HELP, JSON.stringify(helpData));
+            showToast('បានរក្សាទុកការកែប្រែព័ត៌មានជំនួយរួចរាល់!', 'success');
+            openHelpModal();
+        }
+        window.saveHelpFromModal = saveHelpFromModal;
+
+        function closeHelpModal() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
